@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+google-generativeai
+python-dotenv
+pydantic
+httpx
+aiosqlite
+apscheduler
+feedparser
+sqlalchemy
+asyncpg

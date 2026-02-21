@@ -1,0 +1,14 @@
+{
+    "python.defaultInterpreterPath": "C:\\Users\\strange\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "python.pythonPath": "C:\\Users\\strange\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "python.analysis.extraPaths": [
+        "./backend",
+        "C:\\Users\\strange\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages"
+    ],
+    "python.autoComplete.extraPaths": [
+        "./backend",
+        "C:\\Users\\strange\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages"
+    ],
+    "python.analysis.pythonPath": "C:\\Users\\strange\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "python.languageServer": "Pylance"
+}

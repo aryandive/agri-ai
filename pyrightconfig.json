@@ -1,0 +1,13 @@
+{
+    "pythonVersion": "3.12",
+    "pythonPlatform": "Windows",
+    "executionEnvironments": [
+        {
+            "root": "backend",
+            "pythonVersion": "3.12",
+            "extraPaths": [
+                "C:\\Users\\strange\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages"
+            ]
+        }
+    ]
+}
