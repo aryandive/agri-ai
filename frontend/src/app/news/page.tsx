@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -78,6 +79,7 @@ const LANGUAGES: Record<string, string> = {
 };
 
 export default function NewsPage() {
+    const t = useTranslations("News");
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [schemes, setSchemes] = useState<Scheme[]>([]);
     const [diseases, setDiseases] = useState<DiseaseCure[]>([]);
@@ -177,27 +179,27 @@ export default function NewsPage() {
             {/* Header */}
             <div className="animate-fade-in-up" style={{ marginBottom: "28px" }}>
                 <p style={{ color: "#8b5cf6", fontWeight: 600, fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    📰 Stay Informed
+                    {t("tag")}
                 </p>
                 <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif", marginBottom: "8px" }}>
-                    <span className="gradient-text">Agriculture News & Schemes</span>
+                    <span className="gradient-text">{t("title")}</span>
                 </h1>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-                    Live agriculture news from PIB, government schemes, and policy updates — simplified for farmers.
+                    {t("subtitle")}
                 </p>
             </div>
 
             {/* Tab Toggle + Fetch Button */}
             <div className="animate-fade-in-up animate-delay-1" style={{ opacity: 0, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
                 <div style={{ display: "flex", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--color-border)" }}>
-                    {(["news", "schemes", "diseases"] as const).map((t) => (
-                        <button key={t} onClick={() => setTab(t)} style={{
+                    {(["news", "schemes", "diseases"] as const).map((tabId) => (
+                        <button key={tabId} onClick={() => setTab(tabId)} style={{
                             padding: "10px 22px",
-                            background: tab === t ? "var(--color-primary)" : "var(--color-bg-secondary)",
-                            color: tab === t ? "white" : "var(--color-text-muted)",
+                            background: tab === tabId ? "var(--color-primary)" : "var(--color-bg-secondary)",
+                            color: tab === tabId ? "white" : "var(--color-text-muted)",
                             border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.85rem",
                         }}>
-                            {t === "news" ? "📰 News" : t === "schemes" ? "🏛️ Schemes" : "🦠 Disease & Cure"}
+                            {tabId === "news" ? t("tabNews") : tabId === "schemes" ? t("tabSchemes") : t("tabDiseases")}
                         </button>
                     ))}
                 </div>
@@ -216,7 +218,7 @@ export default function NewsPage() {
                         ))}
                     </select>
                     <button onClick={handleFetchAndSummarize} className="btn-primary" disabled={fetching} style={{ padding: "8px 16px", fontSize: "0.8rem" }}>
-                        {fetching ? "⏳ Fetching..." : "🔄 Fetch Latest"}
+                        {fetching ? t("btnFetching") : t("btnFetchLatest")}
                     </button>
                 </div>
             </div>
@@ -228,7 +230,7 @@ export default function NewsPage() {
                     padding: "8px 14px", background: "var(--color-bg-secondary)", color: "var(--color-text-main)",
                     border: "1px solid var(--color-border)", borderRadius: "10px", fontSize: "0.8rem", minWidth: "140px",
                 }}>
-                    <option value="">📍 All States</option>
+                    <option value="">{t("filterAllStates")}</option>
                     {STATES.filter((s) => s !== "All States").map((s) => (
                         <option key={s} value={s}>{s}</option>
                     ))}
@@ -240,7 +242,7 @@ export default function NewsPage() {
                         padding: "8px 14px", background: "var(--color-bg-secondary)", color: "var(--color-text-main)",
                         border: "1px solid var(--color-border)", borderRadius: "10px", fontSize: "0.8rem", minWidth: "120px",
                     }}>
-                        <option value="">📂 All Categories</option>
+                        <option value="">{t("filterAllCategories")}</option>
                         {Object.keys(categoryConfig).map((c) => (
                             <option key={c} value={c}>{categoryConfig[c].emoji} {c.charAt(0).toUpperCase() + c.slice(1)}</option>
                         ))}
@@ -251,7 +253,7 @@ export default function NewsPage() {
                 {tab === "news" && (
                     <input
                         type="text"
-                        placeholder="🔍 Search news..."
+                        placeholder={t("searchPlaceholder")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && loadArticles()}
@@ -268,10 +270,10 @@ export default function NewsPage() {
                     background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)",
                 }}>
                     <p style={{ fontWeight: 700, color: "#ef4444", fontSize: "0.9rem", marginBottom: "6px" }}>
-                        🔔 Urgent: {schemes.filter((s) => s.is_urgent).length} scheme(s) with deadline within 15 days!
+                        {t("urgentBanner", { count: schemes.filter((s) => s.is_urgent).length })}
                     </p>
                     <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                        Apply before the deadline to avail benefits.
+                        {t("urgentSub")}
                     </p>
                 </div>
             )}
@@ -280,7 +282,7 @@ export default function NewsPage() {
             {loading && (
                 <div style={{ textAlign: "center", padding: "48px" }}>
                     <span className="spinner" style={{ width: "32px", height: "32px" }}></span>
-                    <p style={{ color: "var(--color-text-muted)", marginTop: "12px" }}>Loading...</p>
+                    <p style={{ color: "var(--color-text-muted)", marginTop: "12px" }}>{t("loading")}</p>
                 </div>
             )}
 
@@ -291,10 +293,10 @@ export default function NewsPage() {
                         <div className="glass-card" style={{ padding: "48px", textAlign: "center" }}>
                             <p style={{ fontSize: "2.5rem", marginBottom: "12px" }}>📰</p>
                             <p style={{ color: "var(--color-text-muted)", marginBottom: "16px" }}>
-                                No news articles yet. Click &quot;Fetch Latest&quot; to pull live agriculture news.
+                                {t("noNews")}
                             </p>
                             <button onClick={handleFetchAndSummarize} className="btn-primary" disabled={fetching}>
-                                {fetching ? "⏳ Fetching..." : "🔄 Fetch Latest News"}
+                                {fetching ? t("btnFetching") : t("btnFetchNews")}
                             </button>
                         </div>
                     )}
@@ -350,7 +352,7 @@ export default function NewsPage() {
                                         {/* Key Points */}
                                         {article.key_points && article.key_points.length > 0 && (
                                             <div style={{ marginBottom: "12px" }}>
-                                                <p style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--color-text-main)", marginBottom: "6px" }}>📌 Key Points:</p>
+                                                <p style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--color-text-main)", marginBottom: "6px" }}>{t("keyPoints")}</p>
                                                 <ul style={{ paddingLeft: "20px", margin: 0 }}>
                                                     {article.key_points.map((kp, i) => (
                                                         <li key={i} style={{ fontSize: "0.82rem", color: "var(--color-text-muted)", marginBottom: "3px" }}>{kp}</li>
@@ -371,7 +373,7 @@ export default function NewsPage() {
                                                         cursor: "pointer",
                                                     }}
                                                 >
-                                                    {translatingId === article.id ? "⏳ Translating..." : `🌐 Translate to ${LANGUAGES[language]}`}
+                                                    {translatingId === article.id ? t("btnTranslating") : t("btnTranslate", { language: LANGUAGES[language] })}
                                                 </button>
                                             )}
                                             {article.url && (
@@ -386,11 +388,11 @@ export default function NewsPage() {
                                                         textDecoration: "none",
                                                     }}
                                                 >
-                                                    🔗 Read Full Article
+                                                    {t("btnReadFull")}
                                                 </a>
                                             )}
                                             <span style={{ fontSize: "0.72rem", color: "var(--color-text-dim)" }}>
-                                                Source: {article.source} ({article.source_type})
+                                                {t("sourcePrefix")} {article.source} ({article.source_type})
                                             </span>
                                         </div>
                                     </div>
@@ -408,7 +410,7 @@ export default function NewsPage() {
                         <div className="glass-card" style={{ padding: "48px", textAlign: "center" }}>
                             <p style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🏛️</p>
                             <p style={{ color: "var(--color-text-muted)" }}>
-                                No schemes found. Schemes are auto-detected from news articles after summarization.
+                                {t("noSchemes")}
                             </p>
                         </div>
                     )}
@@ -431,7 +433,7 @@ export default function NewsPage() {
                                         fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase",
                                         animation: "pulse 2s infinite",
                                     }}>
-                                        🔔 URGENT
+                                        {t("badgeUrgent")}
                                     </span>
                                 )}
                                 <span style={{
@@ -463,13 +465,13 @@ export default function NewsPage() {
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px" }}>
                                 {scheme.eligibility && (
                                     <div style={{ background: "var(--color-bg-secondary)", borderRadius: "10px", padding: "12px", border: "1px solid var(--color-border)" }}>
-                                        <p style={{ fontSize: "0.72rem", color: "var(--color-text-dim)", marginBottom: "4px", fontWeight: 600 }}>👤 Eligibility</p>
+                                        <p style={{ fontSize: "0.72rem", color: "var(--color-text-dim)", marginBottom: "4px", fontWeight: 600 }}>{t("badgeEligibility")}</p>
                                         <p style={{ fontSize: "0.82rem", color: "var(--color-text-muted)" }}>{scheme.eligibility}</p>
                                     </div>
                                 )}
                                 {scheme.deadline && (
                                     <div style={{ background: "var(--color-bg-secondary)", borderRadius: "10px", padding: "12px", border: "1px solid var(--color-border)" }}>
-                                        <p style={{ fontSize: "0.72rem", color: "var(--color-text-dim)", marginBottom: "4px", fontWeight: 600 }}>📅 Deadline</p>
+                                        <p style={{ fontSize: "0.72rem", color: "var(--color-text-dim)", marginBottom: "4px", fontWeight: 600 }}>{t("badgeDeadline")}</p>
                                         <p style={{ fontSize: "0.82rem", color: scheme.is_urgent ? "#ef4444" : "var(--color-text-muted)", fontWeight: scheme.is_urgent ? 700 : 400 }}>
                                             {scheme.deadline}
                                         </p>
@@ -489,7 +491,7 @@ export default function NewsPage() {
                                         textDecoration: "none",
                                     }}
                                 >
-                                    📝 Apply Now →
+                                    {t("btnApply")}
                                 </a>
                             )}
                         </div>
@@ -504,10 +506,10 @@ export default function NewsPage() {
                         <div className="glass-card" style={{ padding: "48px", textAlign: "center" }}>
                             <p style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🦠</p>
                             <p style={{ color: "var(--color-text-muted)", marginBottom: "8px" }}>
-                                No disease data yet. Add entries via Sanity CMS to populate this section.
+                                {t("noDiseases")}
                             </p>
                             <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)" }}>
-                                This data powers the Crop Doctor recommendations.
+                                {t("noDiseasesSub")}
                             </p>
                         </div>
                     )}
@@ -570,7 +572,7 @@ export default function NewsPage() {
                                         {/* Affected Crops */}
                                         {disease.affectedCrops?.length > 0 && (
                                             <div style={{ marginBottom: "10px" }}>
-                                                <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)", fontWeight: 600, marginBottom: "4px" }}>🌾 Affected Crops:</p>
+                                                <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)", fontWeight: 600, marginBottom: "4px" }}>{t("labelAffectedCrops")}</p>
                                                 <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                                                     {disease.affectedCrops.map((c, i) => (
                                                         <span key={i} style={{
@@ -589,7 +591,7 @@ export default function NewsPage() {
                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "10px", marginTop: "14px" }}>
                                     {disease.symptoms?.length > 0 && (
                                         <div style={{ background: "var(--color-bg-secondary)", borderRadius: "10px", padding: "12px", border: "1px solid var(--color-border)" }}>
-                                            <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)", fontWeight: 600, marginBottom: "6px" }}>🔍 Symptoms</p>
+                                            <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)", fontWeight: 600, marginBottom: "6px" }}>{t("labelSymptoms")}</p>
                                             <ul style={{ paddingLeft: "16px", margin: 0 }}>
                                                 {disease.symptoms.map((s, i) => (
                                                     <li key={i} style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "2px" }}>{s}</li>
@@ -599,7 +601,7 @@ export default function NewsPage() {
                                     )}
                                     {disease.cureSteps?.length > 0 && (
                                         <div style={{ background: "var(--color-bg-secondary)", borderRadius: "10px", padding: "12px", border: "1px solid var(--color-border)" }}>
-                                            <p style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: 600, marginBottom: "6px" }}>💊 Cure Steps</p>
+                                            <p style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: 600, marginBottom: "6px" }}>{t("labelCureSteps")}</p>
                                             <ol style={{ paddingLeft: "16px", margin: 0 }}>
                                                 {disease.cureSteps.map((s, i) => (
                                                     <li key={i} style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "2px" }}>{s}</li>
@@ -609,7 +611,7 @@ export default function NewsPage() {
                                     )}
                                     {disease.pesticides?.length > 0 && (
                                         <div style={{ background: "var(--color-bg-secondary)", borderRadius: "10px", padding: "12px", border: "1px solid var(--color-border)" }}>
-                                            <p style={{ fontSize: "0.75rem", color: "#f59e0b", fontWeight: 600, marginBottom: "6px" }}>🧪 Pesticides</p>
+                                            <p style={{ fontSize: "0.75rem", color: "#f59e0b", fontWeight: 600, marginBottom: "6px" }}>{t("labelPesticides")}</p>
                                             <ul style={{ paddingLeft: "16px", margin: 0 }}>
                                                 {disease.pesticides.map((p, i) => (
                                                     <li key={i} style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "2px" }}>{p}</li>
@@ -619,7 +621,7 @@ export default function NewsPage() {
                                     )}
                                     {disease.organicRemedies?.length > 0 && (
                                         <div style={{ background: "var(--color-bg-secondary)", borderRadius: "10px", padding: "12px", border: "1px solid var(--color-border)" }}>
-                                            <p style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: 600, marginBottom: "6px" }}>🌿 Organic Remedies</p>
+                                            <p style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: 600, marginBottom: "6px" }}>{t("labelOrganicRemedies")}</p>
                                             <ul style={{ paddingLeft: "16px", margin: 0 }}>
                                                 {disease.organicRemedies.map((r, i) => (
                                                     <li key={i} style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "2px" }}>{r}</li>
@@ -629,7 +631,7 @@ export default function NewsPage() {
                                     )}
                                     {disease.preventionTips?.length > 0 && (
                                         <div style={{ background: "var(--color-bg-secondary)", borderRadius: "10px", padding: "12px", border: "1px solid var(--color-border)" }}>
-                                            <p style={{ fontSize: "0.75rem", color: "#3b82f6", fontWeight: 600, marginBottom: "6px" }}>🛡️ Prevention</p>
+                                            <p style={{ fontSize: "0.75rem", color: "#3b82f6", fontWeight: 600, marginBottom: "6px" }}>{t("labelPrevention")}</p>
                                             <ul style={{ paddingLeft: "16px", margin: 0 }}>
                                                 {disease.preventionTips.map((t, i) => (
                                                     <li key={i} style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "2px" }}>{t}</li>

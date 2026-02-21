@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import ProfileSettings from "@/components/ProfileSettings";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -37,18 +39,26 @@ interface PastOrder {
 
 const TABS = ["Personal Info", "Farm Info", "Orders", "Settings"];
 
-const SOIL_TYPES = [
-    { id: "black", name: "Black Soil" },
-    { id: "alluvial", name: "Alluvial Soil" },
-    { id: "red", name: "Red / Yellow Soil" },
-    { id: "laterite", name: "Laterite Soil" },
-    { id: "arid", name: "Arid / Desert" },
-    { id: "mountain", name: "Mountain / Forest" },
-];
-
 export default function ProfilePage() {
     const { user, isLoaded } = useUser();
     const router = useRouter();
+    const t = useTranslations("Profile");
+
+    const SOIL_TYPES = [
+        { id: "black", name: t("soilBlack") },
+        { id: "alluvial", name: t("soilAlluvial") },
+        { id: "red", name: t("soilRed") },
+        { id: "laterite", name: t("soilLaterite") },
+        { id: "arid", name: t("soilArid") },
+        { id: "mountain", name: t("soilMountain") },
+    ];
+
+    const tabNames: Record<string, string> = {
+        "Personal Info": t("tabPersonalInfo"),
+        "Farm Info": t("tabFarmInfo"),
+        "Orders": t("tabOrders"),
+        "Settings": t("tabSettings")
+    };
 
     const [activeTab, setActiveTab] = useState("Personal Info");
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -132,14 +142,14 @@ export default function ProfilePage() {
             });
 
             if (resp.ok) {
-                setSaveMessage("✅ Profile updated successfully!");
+                setSaveMessage(t("msgSaveSuccess"));
                 setTimeout(() => setSaveMessage(""), 3000);
             } else {
-                setSaveMessage("❌ Failed to update profile.");
+                setSaveMessage(t("msgSaveFailed"));
             }
         } catch (e) {
             console.error(e);
-            setSaveMessage("❌ Network error saving profile.");
+            setSaveMessage(t("msgNetworkError"));
         } finally {
             setSaving(false);
         }
@@ -157,16 +167,16 @@ export default function ProfilePage() {
         setCrops(crops.filter((_, i) => i !== index));
     };
 
-    if (loading) return <div style={{ padding: "40px", textAlign: "center", color: "var(--color-text-muted)" }}>Loading profile...</div>;
+    if (loading) return <div style={{ padding: "40px", textAlign: "center", color: "var(--color-text-muted)" }}>{t("loading")}</div>;
 
     return (
         <div style={{ maxWidth: "1000px" }}>
             <div className="animate-fade-in-up" style={{ marginBottom: "32px" }}>
                 <p style={{ color: "var(--color-primary-light)", fontWeight: 600, fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    ⚙️ Account Management
+                    {t("tag")}
                 </p>
                 <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif" }}>
-                    <span className="gradient-text">Your Profile</span>
+                    <span className="gradient-text">{t("title")}</span>
                 </h1>
             </div>
 
@@ -192,7 +202,7 @@ export default function ProfilePage() {
                                     transition: "all 0.2s"
                                 }}
                             >
-                                {tab}
+                                {tabNames[tab]}
                             </button>
                         ))}
                     </div>
@@ -204,11 +214,11 @@ export default function ProfilePage() {
                     {/* --- PERSONAL INFO TAB --- */}
                     {activeTab === "Personal Info" && (
                         <div>
-                            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "24px" }}>👤 Personal Information</h2>
+                            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "24px" }}>{t("sectionPersonalInfo")}</h2>
 
                             <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "400px" }}>
                                 <div>
-                                    <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "6px" }}>Full Name</label>
+                                    <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "6px" }}>{t("labelFullName")}</label>
                                     <input
                                         type="text"
                                         className="input-field"
@@ -219,7 +229,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div>
-                                    <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "6px" }}>Email Address (readonly)</label>
+                                    <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "6px" }}>{t("labelEmail")}</label>
                                     <input
                                         type="email"
                                         className="input-field"
@@ -227,7 +237,7 @@ export default function ProfilePage() {
                                         disabled
                                         style={{ width: "100%", opacity: 0.6, cursor: "not-allowed" }}
                                     />
-                                    <p style={{ fontSize: "0.7rem", color: "var(--color-text-dim)", marginTop: "4px" }}>Managed by Clerk authentication.</p>
+                                    <p style={{ fontSize: "0.7rem", color: "var(--color-text-dim)", marginTop: "4px" }}>{t("emailHelp")}</p>
                                 </div>
                             </div>
                         </div>
@@ -236,34 +246,34 @@ export default function ProfilePage() {
                     {/* --- FARM INFO TAB --- */}
                     {activeTab === "Farm Info" && (
                         <div>
-                            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "24px" }}>🚜 Farm Details</h2>
+                            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "24px" }}>{t("sectionFarmDetails")}</h2>
 
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "32px" }}>
                                 <div>
-                                    <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "6px" }}>Land Area (Acres)</label>
+                                    <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "6px" }}>{t("labelLandArea")}</label>
                                     <input
                                         type="number"
                                         className="input-field"
                                         value={landArea}
-                                        onChange={e => setLandArea(e.target.value)}
+                                        onChange={e => setLandArea(e.target.value ? Number(e.target.value) : "")}
                                         style={{ width: "100%" }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "6px" }}>Soil Type</label>
+                                    <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "6px" }}>{t("labelSoilType")}</label>
                                     <select
                                         className="input-field"
                                         value={soilType}
                                         onChange={e => setSoilType(e.target.value)}
                                         style={{ width: "100%" }}
                                     >
-                                        <option value="">— Select Soil —</option>
+                                        <option value="">{t("selectSoilDefault")}</option>
                                         {SOIL_TYPES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                     </select>
                                 </div>
                             </div>
 
-                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "16px", paddingTop: "24px", borderTop: "1px solid var(--color-border)" }}>🌱 Manage Crops</h3>
+                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "16px", paddingTop: "24px", borderTop: "1px solid var(--color-border)" }}>{t("sectionManageCrops")}</h3>
 
                             {/* Existing Crops */}
                             {crops.length > 0 && (
@@ -273,11 +283,11 @@ export default function ProfilePage() {
                                             <div>
                                                 <p style={{ fontWeight: 600, color: "var(--color-text-main)" }}>🌾 {c.crop}</p>
                                                 <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)" }}>
-                                                    Planted: {c.planted_date} {c.soil_type && `• Soil: ${SOIL_TYPES.find(s => s.id === c.soil_type)?.name || c.soil_type}`}
+                                                    {t("cropPlanted", { date: c.planted_date })} {c.soil_type && t("cropSoil", { soil: SOIL_TYPES.find(s => s.id === c.soil_type)?.name || c.soil_type })}
                                                 </p>
                                             </div>
                                             <button onClick={() => removeCrop(i)} style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "6px", color: "#ef4444", cursor: "pointer", fontWeight: 600, padding: "6px 12px", fontSize: "0.8rem" }}>
-                                                Remove
+                                                {t("btnRemove")}
                                             </button>
                                         </div>
                                     ))}
@@ -286,29 +296,29 @@ export default function ProfilePage() {
 
                             {/* Add New Crop Form */}
                             <div style={{ background: "rgba(0,0,0,0.2)", padding: "16px", borderRadius: "8px", border: "1px dashed var(--color-border)" }}>
-                                <p style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: "12px", color: "var(--color-text-muted)" }}>+ Add Another Crop</p>
+                                <p style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: "12px", color: "var(--color-text-muted)" }}>{t("labelAddCrop")}</p>
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "12px", alignItems: "end" }}>
                                     <div>
-                                        <label style={{ display: "block", fontSize: "0.7rem", marginBottom: "4px" }}>Crop Name</label>
+                                        <label style={{ display: "block", fontSize: "0.7rem", marginBottom: "4px" }}>{t("labelCropName")}</label>
                                         <select
                                             className="input-field"
                                             value={newCropName}
                                             onChange={e => setNewCropName(e.target.value)}
                                             style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}
                                         >
-                                            <option value="">— Select —</option>
-                                            <option value="Wheat">Wheat</option>
-                                            <option value="Rice">Rice (Paddy)</option>
-                                            <option value="Cotton">Cotton</option>
-                                            <option value="Sugarcane">Sugarcane</option>
-                                            <option value="Soybean">Soybean</option>
-                                            <option value="Maize">Maize (Corn)</option>
-                                            <option value="Tomato">Tomato</option>
-                                            <option value="Potato">Potato</option>
+                                            <option value="">{t("selectCropDefault")}</option>
+                                            <option value={t("cropWheat")}>{t("cropWheat")}</option>
+                                            <option value={t("cropRice")}>{t("cropRice")}</option>
+                                            <option value={t("cropCotton")}>{t("cropCotton")}</option>
+                                            <option value={t("cropSugarcane")}>{t("cropSugarcane")}</option>
+                                            <option value={t("cropSoybean")}>{t("cropSoybean")}</option>
+                                            <option value={t("cropMaize")}>{t("cropMaize")}</option>
+                                            <option value={t("cropTomato")}>{t("cropTomato")}</option>
+                                            <option value={t("cropPotato")}>{t("cropPotato")}</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label style={{ display: "block", fontSize: "0.7rem", marginBottom: "4px" }}>Plantation Date</label>
+                                        <label style={{ display: "block", fontSize: "0.7rem", marginBottom: "4px" }}>{t("labelPlantationDate")}</label>
                                         <input
                                             type="date"
                                             className="input-field"
@@ -318,14 +328,14 @@ export default function ProfilePage() {
                                         />
                                     </div>
                                     <div>
-                                        <label style={{ display: "block", fontSize: "0.7rem", marginBottom: "4px" }}>Soil Type</label>
+                                        <label style={{ display: "block", fontSize: "0.7rem", marginBottom: "4px" }}>{t("labelSoilType")}</label>
                                         <select
                                             className="input-field"
                                             value={newCropSoil}
                                             onChange={e => setNewCropSoil(e.target.value)}
                                             style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}
                                         >
-                                            <option value="">— Default Farm Soil —</option>
+                                            <option value="">{t("selectFarmSoilDefault")}</option>
                                             {SOIL_TYPES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                         </select>
                                     </div>
@@ -334,7 +344,7 @@ export default function ProfilePage() {
                                         disabled={!newCropName || !newCropDate}
                                         style={{ padding: "10px 16px", background: "var(--color-primary)", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", opacity: (!newCropName || !newCropDate) ? 0.5 : 1 }}
                                     >
-                                        Add
+                                        {t("btnAdd")}
                                     </button>
                                 </div>
                             </div>
@@ -344,14 +354,14 @@ export default function ProfilePage() {
                     {/* --- ORDERS TAB --- */}
                     {activeTab === "Orders" && (
                         <div>
-                            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "24px" }}>📦 Order History</h2>
+                            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "24px" }}>{t("sectionOrderHistory")}</h2>
 
                             {orders.length === 0 ? (
                                 <div style={{ padding: "40px", textAlign: "center", background: "var(--color-bg-secondary)", borderRadius: "12px", border: "1px dashed var(--color-border)" }}>
                                     <p style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🛒</p>
-                                    <p style={{ fontWeight: 600, color: "var(--color-text-main)", fontSize: "1.1rem" }}>No past orders found.</p>
-                                    <p style={{ color: "var(--color-text-dim)", fontSize: "0.85rem", marginTop: "8px" }}>When you place an order in the Marketplace, it will appear here.</p>
-                                    <button onClick={() => router.push("/marketplace")} className="btn-primary" style={{ marginTop: "20px", padding: "10px 24px" }}>Browse Marketplace</button>
+                                    <p style={{ fontWeight: 600, color: "var(--color-text-main)", fontSize: "1.1rem" }}>{t("noOrdersTitle")}</p>
+                                    <p style={{ color: "var(--color-text-dim)", fontSize: "0.85rem", marginTop: "8px" }}>{t("noOrdersSub")}</p>
+                                    <button onClick={() => router.push("/marketplace")} className="btn-primary" style={{ marginTop: "20px", padding: "10px 24px" }}>{t("btnBrowseMarketplace")}</button>
                                 </div>
                             ) : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -362,11 +372,11 @@ export default function ProfilePage() {
                                         }}>
                                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid var(--color-border)" }}>
                                                 <div>
-                                                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "4px" }}>ORDER ID</p>
+                                                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "4px" }}>{t("labelOrderID")}</p>
                                                     <p style={{ fontWeight: 700, fontFamily: "Outfit, sans-serif", letterSpacing: "1px" }}>#{order.id}</p>
                                                 </div>
                                                 <div style={{ textAlign: "right" }}>
-                                                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "4px" }}>ORDER DATE</p>
+                                                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "4px" }}>{t("labelOrderDate")}</p>
                                                     <p style={{ fontWeight: 600 }}>{order.date}</p>
                                                 </div>
                                             </div>
@@ -380,7 +390,7 @@ export default function ProfilePage() {
                                             </div>
 
                                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "16px", borderTop: "1px solid var(--color-border)" }}>
-                                                <span style={{ fontWeight: 600, color: "var(--color-text-muted)", fontSize: "0.9rem" }}>Total</span>
+                                                <span style={{ fontWeight: 600, color: "var(--color-text-muted)", fontSize: "0.9rem" }}>{t("labelOrderTotal")}</span>
                                                 <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--color-primary-light)" }}>₹{order.total.toLocaleString()}</span>
                                             </div>
                                         </div>
@@ -393,33 +403,24 @@ export default function ProfilePage() {
                     {/* --- SETTINGS TAB --- */}
                     {activeTab === "Settings" && (
                         <div>
-                            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "24px" }}>⚙️ Preferences</h2>
+                            <ProfileSettings />
+
+                            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "24px", marginTop: "32px" }}>{t("sectionNotifications")}</h2>
 
                             <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                                 <div>
-                                    <label style={{ display: "block", fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "8px" }}>App Language</label>
-                                    <select className="input-field" style={{ width: "250px" }}>
-                                        <option value="en">English</option>
-                                        <option value="hi">Hindi (हिंदी)</option>
-                                        <option value="mr">Marathi (मराठी)</option>
-                                        <option value="te">Telugu (తెలుగు)</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "12px" }}>Notifications</p>
                                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                         <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
                                             <input type="checkbox" defaultChecked style={{ width: "16px", height: "16px", accentColor: "var(--color-primary)" }} />
-                                            <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Weather & Rain Alerts</span>
+                                            <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{t("notifWeather")}</span>
                                         </label>
                                         <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
                                             <input type="checkbox" defaultChecked style={{ width: "16px", height: "16px", accentColor: "var(--color-primary)" }} />
-                                            <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Crop Disease Warnings</span>
+                                            <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{t("notifDisease")}</span>
                                         </label>
                                         <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
                                             <input type="checkbox" style={{ width: "16px", height: "16px", accentColor: "var(--color-primary)" }} />
-                                            <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Mandi Price Drops</span>
+                                            <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{t("notifMandi")}</span>
                                         </label>
                                     </div>
                                 </div>
@@ -436,7 +437,7 @@ export default function ProfilePage() {
                                 disabled={saving}
                                 style={{ padding: "12px 32px", fontSize: "1rem" }}
                             >
-                                {saving ? "Saving..." : "Save Changes"}
+                                {saving ? t("btnSaving") : t("btnSaveChanges")}
                             </button>
                             {saveMessage && (
                                 <span className="animate-fade-in-up" style={{ color: saveMessage.includes("✅") ? "#22c55e" : "#ef4444", fontWeight: 600, fontSize: "0.9rem" }}>

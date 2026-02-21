@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 // --- Types ---
 interface Product {
@@ -130,6 +131,7 @@ interface Address {
 }
 
 export default function MarketplacePage() {
+    const t = useTranslations("Marketplace");
     const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
     const [activeCategory, setActiveCategory] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
@@ -211,20 +213,20 @@ export default function MarketplacePage() {
             {/* Header */}
             <div className="animate-fade-in-up" style={{ marginBottom: "28px" }}>
                 <p style={{ color: "#ec4899", fontWeight: 600, fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    🛒 Farm Store
+                    {t("tag")}
                 </p>
                 <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif", marginBottom: "8px" }}>
-                    <span className="gradient-text">Agri Marketplace</span>
+                    <span className="gradient-text">{t("title")}</span>
                 </h1>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-                    Quality seeds, fertilizers, pesticides, and farming equipment from trusted sellers.
+                    {t("subtitle")}
                 </p>
             </div>
 
             {/* Controls */}
             <div className="animate-fade-in-up animate-delay-1" style={{ opacity: 0, display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" }}>
                 <input
-                    type="text" className="input-field" placeholder="🔍 Search products..."
+                    type="text" className="input-field" placeholder={t("searchPlaceholder")}
                     value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                     style={{ flex: 1, minWidth: "180px", padding: "10px 14px" }}
                 />
@@ -232,10 +234,10 @@ export default function MarketplacePage() {
                     padding: "10px 14px", background: "var(--color-bg-secondary)", color: "var(--color-text-main)",
                     border: "1px solid var(--color-border)", borderRadius: "10px", fontSize: "0.82rem",
                 }}>
-                    <option value="featured">⭐ Featured</option>
-                    <option value="price-low">💰 Price: Low to High</option>
-                    <option value="price-high">💸 Price: High to Low</option>
-                    <option value="rating">⭐ Rating</option>
+                    <option value="featured">{t("sortFeatured")}</option>
+                    <option value="price-low">{t("sortPriceLow")}</option>
+                    <option value="price-high">{t("sortPriceHigh")}</option>
+                    <option value="rating">{t("sortRating")}</option>
                 </select>
                 <button onClick={() => setShowWishlist(!showWishlist)} style={{
                     padding: "10px 18px", background: showWishlist ? "rgba(236,72,153,0.2)" : "var(--color-bg-secondary)",
@@ -243,7 +245,7 @@ export default function MarketplacePage() {
                     border: showWishlist ? "1px solid #ec4899" : "1px solid var(--color-border)", borderRadius: "10px", cursor: "pointer",
                     fontWeight: 700, fontSize: "0.85rem", position: "relative",
                 }}>
-                    ❤️ Wishlist {wishlist.length > 0 && <span style={{
+                    {t("btnWishlist")} {wishlist.length > 0 && <span style={{
                         position: "absolute", top: "-6px", right: "-6px",
                         background: "#ec4899", color: "white", borderRadius: "50%",
                         width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center",
@@ -256,7 +258,7 @@ export default function MarketplacePage() {
                     border: "1px solid var(--color-border)", borderRadius: "10px", cursor: "pointer",
                     fontWeight: 700, fontSize: "0.85rem", position: "relative",
                 }}>
-                    🛒 Cart {cartCount > 0 && <span style={{
+                    {t("btnCart")} {cartCount > 0 && <span style={{
                         position: "absolute", top: "-6px", right: "-6px",
                         background: "#ef4444", color: "white", borderRadius: "50%",
                         width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center",
@@ -275,7 +277,7 @@ export default function MarketplacePage() {
                         color: activeCategory === cat ? "#f472b6" : "var(--color-text-dim)",
                         cursor: "pointer", fontSize: "0.8rem", fontWeight: 600,
                     }}>
-                        {cat}
+                        {t(`cat${cat}`)}
                     </button>
                 ))}
             </div>
@@ -283,9 +285,9 @@ export default function MarketplacePage() {
             {/* Wishlist Panel */}
             {showWishlist && (
                 <div className="glass-card" style={{ padding: "20px", marginBottom: "20px", borderColor: "#ec4899" }}>
-                    <h3 style={{ fontWeight: 700, marginBottom: "14px", fontSize: "1.1rem", color: "#f472b6" }}>❤️ Wishlist ({wishlist.length} saved)</h3>
+                    <h3 style={{ fontWeight: 700, marginBottom: "14px", fontSize: "1.1rem", color: "#f472b6" }}>{t("wishlistTitle", { count: wishlist.length })}</h3>
                     {wishlist.length === 0 ? (
-                        <p style={{ color: "var(--color-text-dim)", fontSize: "0.9rem" }}>No items wishlisted yet. Click ❤️ on any product!</p>
+                        <p style={{ color: "var(--color-text-dim)", fontSize: "0.9rem" }}>{t("wishlistEmpty")}</p>
                     ) : (
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px" }}>
                             {products.filter(p => wishlist.includes(p._id)).map(p => (
@@ -297,8 +299,8 @@ export default function MarketplacePage() {
                                         <p style={{ fontWeight: 600, fontSize: "0.8rem", color: "var(--color-text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
                                         <p style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--color-text-main)" }}>₹{p.price.toLocaleString()}</p>
                                         <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
-                                            <button onClick={() => addToCart(p)} className="btn-primary" style={{ fontSize: "0.7rem", padding: "3px 8px" }}>+ Cart</button>
-                                            <button onClick={() => toggleWishlist(p._id)} style={{ fontSize: "0.7rem", padding: "3px 8px", background: "transparent", border: "1px solid #ec4899", color: "#f472b6", borderRadius: "6px", cursor: "pointer" }}>Remove</button>
+                                            <button onClick={() => addToCart(p)} className="btn-primary" style={{ fontSize: "0.7rem", padding: "3px 8px" }}>{t("btnAddCart")}</button>
+                                            <button onClick={() => toggleWishlist(p._id)} style={{ fontSize: "0.7rem", padding: "3px 8px", background: "transparent", border: "1px solid #ec4899", color: "#f472b6", borderRadius: "6px", cursor: "pointer" }}>{t("btnRemove")}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -311,9 +313,9 @@ export default function MarketplacePage() {
             {/* Cart Panel */}
             {showCart && (
                 <div className="glass-card" style={{ padding: "20px", marginBottom: "20px" }}>
-                    <h3 style={{ fontWeight: 700, marginBottom: "14px", fontSize: "1.1rem" }}>🛒 Your Cart ({cartCount} items)</h3>
+                    <h3 style={{ fontWeight: 700, marginBottom: "14px", fontSize: "1.1rem" }}>{t("cartTitle", { count: cartCount })}</h3>
                     {cart.length === 0 ? (
-                        <p style={{ color: "var(--color-text-dim)", fontSize: "0.9rem" }}>Your cart is empty</p>
+                        <p style={{ color: "var(--color-text-dim)", fontSize: "0.9rem" }}>{t("cartEmpty")}</p>
                     ) : (
                         <>
                             {cart.map((item) => (
@@ -341,10 +343,10 @@ export default function MarketplacePage() {
                             ))}
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "14px" }}>
                                 <p style={{ fontWeight: 800, fontSize: "1.1rem", fontFamily: "Outfit, sans-serif" }}>
-                                    Total: ₹{cartTotal.toLocaleString()}
+                                    {t("cartTotal", { total: cartTotal.toLocaleString() })}
                                 </p>
                                 <button className="btn-primary" style={{ padding: "10px 24px" }} onClick={() => setShowCheckout(true)}>
-                                    Checkout →
+                                    {t("btnCheckout")}
                                 </button>
                             </div>
                         </>
@@ -373,7 +375,7 @@ export default function MarketplacePage() {
                                     padding: "3px 10px", borderRadius: "6px",
                                     fontSize: "0.65rem", fontWeight: 700,
                                 }}>
-                                    ⭐ SPONSORED
+                                    {t("badgeSponsored")}
                                 </span>
                             )}
 
@@ -385,7 +387,7 @@ export default function MarketplacePage() {
                                     padding: "3px 10px", borderRadius: "6px",
                                     fontSize: "0.7rem", fontWeight: 700,
                                 }}>
-                                    {discountPct}% OFF
+                                    {t("badgeOff", { pct: discountPct })}
                                 </span>
                             )}
 
@@ -415,7 +417,7 @@ export default function MarketplacePage() {
                             {/* Product Info */}
                             <div style={{ padding: "16px" }}>
                                 <p style={{ fontSize: "0.7rem", color: "#ec4899", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>
-                                    {product.category} • {product.seller}
+                                    {t(`cat${product.category}`)} • {product.seller}
                                 </p>
                                 <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text-main)", lineHeight: 1.4, marginBottom: "6px", minHeight: "40px" }}>
                                     {product.name}
@@ -464,7 +466,7 @@ export default function MarketplacePage() {
                                             </div>
                                         ) : (
                                             <button onClick={() => addToCart(product)} className="btn-primary" style={{ flex: 1, padding: "10px", fontSize: "0.82rem" }}>
-                                                🛒 Add to Cart
+                                                {t("btnAddCartFull")}
                                             </button>
                                         )
                                     ) : (
@@ -473,7 +475,7 @@ export default function MarketplacePage() {
                                             background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)",
                                             borderRadius: "10px", color: "var(--color-text-dim)", cursor: "not-allowed"
                                         }}>
-                                            Out of Stock
+                                            {t("btnOutOfStock")}
                                         </button>
                                     )}
                                     <button onClick={() => setDetailProduct(product)} style={{
@@ -520,16 +522,16 @@ export default function MarketplacePage() {
                             {/* Badges */}
                             <div style={{ display: "flex", gap: "8px", marginBottom: "10px", flexWrap: "wrap" }}>
                                 <span style={{ padding: "3px 10px", borderRadius: "6px", background: "rgba(236,72,153,0.12)", color: "#f472b6", fontSize: "0.72rem", fontWeight: 600 }}>
-                                    {detailProduct.category}
+                                    {t(`cat${detailProduct.category}`)}
                                 </span>
                                 {detailProduct.isSponsored && (
                                     <span style={{ padding: "3px 10px", borderRadius: "6px", background: "rgba(245,158,11,0.12)", color: "#f59e0b", fontSize: "0.72rem", fontWeight: 600 }}>
-                                        ⭐ Sponsored
+                                        {t("badgeSponsored")}
                                     </span>
                                 )}
                                 {!detailProduct.inStock && (
                                     <span style={{ padding: "3px 10px", borderRadius: "6px", background: "rgba(239,68,68,0.12)", color: "#ef4444", fontSize: "0.72rem", fontWeight: 600 }}>
-                                        Out of Stock
+                                        {t("btnOutOfStock")}
                                     </span>
                                 )}
                             </div>
@@ -552,7 +554,7 @@ export default function MarketplacePage() {
                                             ₹{detailProduct.originalPrice.toLocaleString()}
                                         </span>
                                         <span style={{ padding: "3px 10px", borderRadius: "6px", background: "rgba(34,197,94,0.15)", color: "#22c55e", fontSize: "0.82rem", fontWeight: 700 }}>
-                                            Save ₹{(detailProduct.originalPrice - detailProduct.price).toLocaleString()}
+                                            {t("modalSave", { amount: (detailProduct.originalPrice - detailProduct.price).toLocaleString() })}
                                         </span>
                                     </>
                                 )}
@@ -564,14 +566,14 @@ export default function MarketplacePage() {
                                     {"★".repeat(Math.floor(detailProduct.rating))}{"☆".repeat(5 - Math.floor(detailProduct.rating))}
                                 </span>
                                 <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
-                                    {detailProduct.rating} • {detailProduct.reviews} reviews
+                                    {detailProduct.rating} • {t("modalReviews", { count: detailProduct.reviews })}
                                 </span>
                             </div>
 
                             {/* Features */}
                             {detailProduct.features && detailProduct.features.length > 0 && (
                                 <div style={{ marginBottom: "16px" }}>
-                                    <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "8px" }}>✨ Key Features</p>
+                                    <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "8px" }}>{t("modalKeyFeatures")}</p>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                                         {detailProduct.features.map((f, i) => (
                                             <span key={i} style={{
@@ -589,7 +591,7 @@ export default function MarketplacePage() {
                             {/* Specifications */}
                             {detailProduct.specifications && detailProduct.specifications.length > 0 && (
                                 <div style={{ marginBottom: "16px" }}>
-                                    <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "8px" }}>📋 Specifications</p>
+                                    <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "8px" }}>{t("modalSpecifications")}</p>
                                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                                         {detailProduct.specifications.map((s, i) => (
                                             <div key={i} style={{
@@ -606,7 +608,7 @@ export default function MarketplacePage() {
 
                             {/* Seller */}
                             <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "16px" }}>
-                                🏪 Sold by: <strong>{detailProduct.seller}</strong>
+                                {t("soldBy")} <strong>{detailProduct.seller}</strong>
                             </p>
 
                             {/* Cart controls in modal */}
@@ -618,7 +620,7 @@ export default function MarketplacePage() {
                                         padding: "8px 16px", border: "1px solid var(--color-border)",
                                         justifyContent: "space-between"
                                     }}>
-                                        <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--color-text-muted)" }}>In Cart</span>
+                                        <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--color-text-muted)" }}>{t("badgeInCart")}</span>
                                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                                             <button onClick={() => updateQty(detailProduct._id, -1)} style={{ ...qtyBtnStyle, width: "36px", height: "36px" }}>−</button>
                                             <span style={{ fontWeight: 800, fontSize: "1.1rem", minWidth: "28px", textAlign: "center" }}>{getCartQty(detailProduct._id)}</span>
@@ -627,7 +629,7 @@ export default function MarketplacePage() {
                                     </div>
                                 ) : (
                                     <button onClick={() => addToCart(detailProduct)} className="btn-primary" style={{ width: "100%", padding: "12px", fontSize: "0.95rem" }}>
-                                        🛒 Add to Cart — ₹{detailProduct.price.toLocaleString()}
+                                        {t("btnAddCartPrice", { price: detailProduct.price.toLocaleString() })}
                                     </button>
                                 )
                             )}
@@ -652,16 +654,16 @@ export default function MarketplacePage() {
                                     background: "rgba(255,255,255,0.08)", border: "none", borderRadius: "50%",
                                     width: "30px", height: "30px", color: "var(--color-text-muted)", cursor: "pointer", fontSize: "1rem"
                                 }}>✕</button>
-                                <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "4px", fontFamily: "Outfit, sans-serif" }}>📦 Delivery Details</h2>
-                                <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "20px" }}>Order total: <strong style={{ color: "var(--color-text-main)" }}>₹{cartTotal.toLocaleString()}</strong> • {cartCount} items</p>
+                                <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "4px", fontFamily: "Outfit, sans-serif" }}>{t("checkoutTitle")}</h2>
+                                <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "20px" }}>{t("checkoutTotal")} <strong style={{ color: "var(--color-text-main)" }}>₹{cartTotal.toLocaleString()}</strong> • {cartCount} {t("checkoutItems")}</p>
 
                                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                                     {([
-                                        { key: "name", label: "Full Name", placeholder: "e.g. Rajan Patel", type: "text" },
-                                        { key: "phone", label: "Mobile Number", placeholder: "10-digit mobile number", type: "tel" },
-                                        { key: "address", label: "Full Address", placeholder: "House, Street, Village", type: "text" },
-                                        { key: "pincode", label: "PIN Code", placeholder: "6-digit PIN", type: "text" },
-                                        { key: "state", label: "State", placeholder: "e.g. Maharashtra", type: "text" },
+                                        { key: "name", label: t("labelName"), placeholder: "e.g. Rajan Patel", type: "text" },
+                                        { key: "phone", label: t("labelPhone"), placeholder: "10-digit mobile number", type: "tel" },
+                                        { key: "address", label: t("labelAddress"), placeholder: "House, Street, Village", type: "text" },
+                                        { key: "pincode", label: t("labelPincode"), placeholder: "6-digit PIN", type: "text" },
+                                        { key: "state", label: t("labelState"), placeholder: "e.g. Maharashtra", type: "text" },
                                     ] as { key: keyof Address; label: string; placeholder: string; type: string }[]).map(f => (
                                         <div key={f.key}>
                                             <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "4px" }}>{f.label}</label>
@@ -695,19 +697,19 @@ export default function MarketplacePage() {
                                         localStorage.removeItem("agri_cart");
                                     }}
                                 >
-                                    ✅ Place Order — ₹{cartTotal.toLocaleString()}
+                                    {t("btnPlaceOrder", { total: cartTotal.toLocaleString() })}
                                 </button>
                             </>
                         ) : (
                             <div style={{ textAlign: "center", padding: "16px 0" }}>
-                                <p style={{ fontSize: "3rem", marginBottom: "12px" }}>🎉</p>
-                                <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "8px", fontFamily: "Outfit, sans-serif", color: "#22c55e" }}>Order Placed!</h2>
-                                <p style={{ color: "var(--color-text-muted)", marginBottom: "6px", fontSize: "0.9rem" }}>Your order will be delivered to:</p>
+                                <p style={{ fontSize: "3rem", marginBottom: "12px" }}>{t("orderSuccess")}</p>
+                                <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "8px", fontFamily: "Outfit, sans-serif", color: "#22c55e" }}>{t("orderPlacedTitle")}</h2>
+                                <p style={{ color: "var(--color-text-muted)", marginBottom: "6px", fontSize: "0.9rem" }}>{t("orderDeliveredTo")}</p>
                                 <p style={{ fontWeight: 700, color: "var(--color-text-main)", marginBottom: "4px" }}>{addr.name}</p>
                                 <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{addr.address}, {addr.pincode}, {addr.state}</p>
                                 <button className="btn-primary" style={{ marginTop: "20px", padding: "10px 32px" }}
                                     onClick={() => { setShowCheckout(false); setOrderPlaced(false); setShowCart(false); setAddr({ name: "", phone: "", address: "", pincode: "", state: "" }); }}>
-                                    Done
+                                    {t("btnDone")}
                                 </button>
                             </div>
                         )}

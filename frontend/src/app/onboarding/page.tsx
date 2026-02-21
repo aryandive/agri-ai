@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -18,6 +19,7 @@ const soilTypes = [
 export default function OnboardingPage() {
     const { user, isLoaded } = useUser();
     const router = useRouter();
+    const t = useTranslations("Onboarding");
 
     const [step, setStep] = useState(1);
     const [landArea, setLandArea] = useState("");
@@ -30,7 +32,7 @@ export default function OnboardingPage() {
 
     const [submitting, setSubmitting] = useState(false);
 
-    if (!isLoaded) return <div style={{ padding: "40px", textAlign: "center" }}>Loading...</div>;
+    if (!isLoaded) return <div style={{ padding: "40px", textAlign: "center" }}>{t("loading")}</div>;
     if (!user) {
         router.push("/sign-in");
         return null;
@@ -45,12 +47,12 @@ export default function OnboardingPage() {
                     setLocLoading(false);
                 },
                 () => {
-                    alert("Failed to get location. Make sure permissions are enabled.");
+                    alert(t("alertLocationFailed"));
                     setLocLoading(false);
                 }
             );
         } else {
-            alert("Geolocation is not supported by your browser");
+            alert(t("alertNoGeolocation"));
             setLocLoading(false);
         }
     };
@@ -89,11 +91,11 @@ export default function OnboardingPage() {
             if (resp.ok) {
                 router.push("/dashboard");
             } else {
-                alert("Failed to save profile. Please try again.");
+                alert(t("errorSaveProfile"));
             }
         } catch (e) {
             console.error(e);
-            alert("Error connecting to server.");
+            alert(t("errorServer"));
         } finally {
             setSubmitting(false);
         }
@@ -103,10 +105,10 @@ export default function OnboardingPage() {
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
             <div className="animate-fade-in-up" style={{ marginBottom: "32px", textAlign: "center" }}>
                 <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif", marginBottom: "8px" }}>
-                    <span className="gradient-text">Welcome to Agri AI</span>
+                    <span className="gradient-text">{t("title")}</span>
                 </h1>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-                    Let's set up your personalized farm profile to get custom insights.
+                    {t("subtitle")}
                 </p>
             </div>
 
@@ -115,11 +117,11 @@ export default function OnboardingPage() {
                 {/* Step 1: Land Area & Location */}
                 {step === 1 && (
                     <div>
-                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px" }}>Step 1: Your Farm Setup</h2>
+                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px" }}>{t("step1Title")}</h2>
 
                         <div style={{ marginBottom: "24px" }}>
                             <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "8px" }}>
-                                Total Land Area (Acres)
+                                {t("labelLandArea")}
                             </label>
                             <input
                                 type="number"
@@ -134,11 +136,11 @@ export default function OnboardingPage() {
 
                         <div style={{ marginBottom: "32px" }}>
                             <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "8px" }}>
-                                Farm Location (For Weather/Market data)
+                                {t("labelLocation")}
                             </label>
                             {location ? (
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px", background: "rgba(20, 184, 166, 0.1)", borderRadius: "12px", border: "1px solid rgba(20, 184, 166, 0.3)", color: "var(--color-text-main)" }}>
-                                    📍 Saved: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                                    {t("locationSaved", { lat: location.lat.toFixed(4), lng: location.lng.toFixed(4) })}
                                 </div>
                             ) : (
                                 <button
@@ -148,7 +150,7 @@ export default function OnboardingPage() {
                                     disabled={locLoading}
                                     style={{ width: "100%", padding: "12px", display: "flex", justifyContent: "center", gap: "8px" }}
                                 >
-                                    {locLoading ? "Locating..." : "📍 Auto-Detect My Location"}
+                                    {locLoading ? t("locating") : t("btnDetectLocation")}
                                 </button>
                             )}
                         </div>
@@ -159,7 +161,7 @@ export default function OnboardingPage() {
                             onClick={() => setStep(2)}
                             disabled={!landArea}
                         >
-                            Next Step →
+                            {t("btnNext")}
                         </button>
                     </div>
                 )}
@@ -167,9 +169,9 @@ export default function OnboardingPage() {
                 {/* Step 2: Soil Type */}
                 {step === 2 && (
                     <div>
-                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px" }}>Step 2: Soil Type</h2>
+                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px" }}>{t("step2Title")}</h2>
                         <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginBottom: "16px" }}>
-                            Select the option that best matches your farm's soil.
+                            {t("step2Subtitle")}
                         </p>
 
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "32px" }}>
@@ -202,7 +204,7 @@ export default function OnboardingPage() {
                                         />
                                     </div>
                                     <p style={{ fontWeight: 600, fontSize: "0.85rem", padding: "8px 4px", color: soil === s.id ? "#14b8a6" : "var(--color-text-main)" }}>
-                                        {s.name}
+                                        {t(s.id === "black" ? "soilBlack" : s.id === "alluvial" ? "soilAlluvial" : s.id === "red" ? "soilRed" : s.id === "laterite" ? "soilLaterite" : s.id === "arid" ? "soilArid" : s.id === "mountain" ? "soilMountain" : s.name as any) || s.name}
                                     </p>
                                 </div>
                             ))}
@@ -210,7 +212,7 @@ export default function OnboardingPage() {
 
                         <div style={{ display: "flex", gap: "12px" }}>
                             <button className="btn-secondary" onClick={() => setStep(1)} style={{ flex: 1 }}>
-                                ← Back
+                                {t("btnBack")}
                             </button>
                             <button
                                 className="btn-primary"
@@ -218,7 +220,7 @@ export default function OnboardingPage() {
                                 disabled={!soil}
                                 style={{ flex: 2 }}
                             >
-                                Next Step →
+                                {t("btnNext")}
                             </button>
                         </div>
                     </div>
@@ -227,9 +229,9 @@ export default function OnboardingPage() {
                 {/* Step 3: Current Crops */}
                 {step === 3 && (
                     <div>
-                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px" }}>Step 3: Current Crops</h2>
+                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px" }}>{t("step3Title")}</h2>
                         <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginBottom: "16px" }}>
-                            What have you already planted? Add the plantation date so we can track growth stages.
+                            {t("step3Subtitle")}
                         </p>
 
                         {crops.length > 0 && (
@@ -238,10 +240,10 @@ export default function OnboardingPage() {
                                     <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", background: "var(--color-bg-secondary)", borderRadius: "8px", border: "1px solid var(--color-border)" }}>
                                         <div>
                                             <p style={{ fontWeight: 600, color: "var(--color-text-main)" }}>🌾 {c.crop}</p>
-                                            <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)" }}>Planted: {c.planted_date}</p>
+                                            <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)" }}>{t("plantedDate", { date: c.planted_date })}</p>
                                         </div>
                                         <button onClick={() => removeCrop(i)} style={{ background: "transparent", border: "none", color: "var(--color-danger)", cursor: "pointer", fontWeight: 600, padding: "8px" }}>
-                                            Remove
+                                            {t("btnRemove")}
                                         </button>
                                     </div>
                                 ))}
@@ -250,87 +252,87 @@ export default function OnboardingPage() {
 
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                             <div>
-                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "4px" }}>Crop Name</label>
+                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "4px" }}>{t("labelCropName")}</label>
                                 <select
                                     className="input-field"
                                     value={currentCrop}
                                     onChange={e => setCurrentCrop(e.target.value)}
                                     style={{ width: "100%", cursor: "pointer" }}
                                 >
-                                    <option value="">— Select a crop —</option>
-                                    <optgroup label="Cereals">
-                                        <option value="Wheat">Wheat</option>
-                                        <option value="Rice">Rice (Paddy)</option>
-                                        <option value="Maize">Maize (Corn)</option>
-                                        <option value="Barley">Barley</option>
-                                        <option value="Sorghum">Sorghum (Jowar)</option>
-                                        <option value="Pearl Millet">Pearl Millet (Bajra)</option>
-                                        <option value="Finger Millet">Finger Millet (Ragi)</option>
+                                    <option value="">{t("selectCropDefault")}</option>
+                                    <optgroup label={t("cropCategories.cereals")}>
+                                        <option value="Wheat">{t("crops.wheat")}</option>
+                                        <option value="Rice">{t("crops.rice")}</option>
+                                        <option value="Maize">{t("crops.maize")}</option>
+                                        <option value="Barley">{t("crops.barley")}</option>
+                                        <option value="Sorghum">{t("crops.sorghum")}</option>
+                                        <option value="Pearl Millet">{t("crops.pearlMillet")}</option>
+                                        <option value="Finger Millet">{t("crops.fingerMillet")}</option>
                                     </optgroup>
-                                    <optgroup label="Pulses">
-                                        <option value="Chickpea">Chickpea (Chana)</option>
-                                        <option value="Lentil">Lentil (Masoor)</option>
-                                        <option value="Pigeon Pea">Pigeon Pea (Tur/Arhar)</option>
-                                        <option value="Mung Bean">Mung Bean (Moong)</option>
-                                        <option value="Black Gram">Black Gram (Urad)</option>
-                                        <option value="Kidney Bean">Kidney Bean (Rajma)</option>
+                                    <optgroup label={t("cropCategories.pulses")}>
+                                        <option value="Chickpea">{t("crops.chickpea")}</option>
+                                        <option value="Lentil">{t("crops.lentil")}</option>
+                                        <option value="Pigeon Pea">{t("crops.pigeonPea")}</option>
+                                        <option value="Mung Bean">{t("crops.mungBean")}</option>
+                                        <option value="Black Gram">{t("crops.blackGram")}</option>
+                                        <option value="Kidney Bean">{t("crops.kidneyBean")}</option>
                                     </optgroup>
-                                    <optgroup label="Oilseeds">
-                                        <option value="Mustard">Mustard</option>
-                                        <option value="Groundnut">Groundnut</option>
-                                        <option value="Soybean">Soybean</option>
-                                        <option value="Sunflower">Sunflower</option>
-                                        <option value="Sesame">Sesame (Til)</option>
-                                        <option value="Castor">Castor</option>
+                                    <optgroup label={t("cropCategories.oilseeds")}>
+                                        <option value="Mustard">{t("crops.mustard")}</option>
+                                        <option value="Groundnut">{t("crops.groundnut")}</option>
+                                        <option value="Soybean">{t("crops.soybean")}</option>
+                                        <option value="Sunflower">{t("crops.sunflower")}</option>
+                                        <option value="Sesame">{t("crops.sesame")}</option>
+                                        <option value="Castor">{t("crops.castor")}</option>
                                     </optgroup>
-                                    <optgroup label="Cash Crops">
-                                        <option value="Cotton">Cotton</option>
-                                        <option value="Sugarcane">Sugarcane</option>
-                                        <option value="Jute">Jute</option>
-                                        <option value="Tobacco">Tobacco</option>
+                                    <optgroup label={t("cropCategories.cashCrops")}>
+                                        <option value="Cotton">{t("crops.cotton")}</option>
+                                        <option value="Sugarcane">{t("crops.sugarcane")}</option>
+                                        <option value="Jute">{t("crops.jute")}</option>
+                                        <option value="Tobacco">{t("crops.tobacco")}</option>
                                     </optgroup>
-                                    <optgroup label="Vegetables">
-                                        <option value="Tomato">Tomato</option>
-                                        <option value="Potato">Potato</option>
-                                        <option value="Onion">Onion</option>
-                                        <option value="Brinjal">Brinjal</option>
-                                        <option value="Cabbage">Cabbage</option>
-                                        <option value="Cauliflower">Cauliflower</option>
-                                        <option value="Chilli">Chilli / Green Pepper</option>
-                                        <option value="Okra">Okra (Bhindi)</option>
-                                        <option value="Pea">Pea</option>
-                                        <option value="Spinach">Spinach</option>
+                                    <optgroup label={t("cropCategories.vegetables")}>
+                                        <option value="Tomato">{t("crops.tomato")}</option>
+                                        <option value="Potato">{t("crops.potato")}</option>
+                                        <option value="Onion">{t("crops.onion")}</option>
+                                        <option value="Brinjal">{t("crops.brinjal")}</option>
+                                        <option value="Cabbage">{t("crops.cabbage")}</option>
+                                        <option value="Cauliflower">{t("crops.cauliflower")}</option>
+                                        <option value="Chilli">{t("crops.chilli")}</option>
+                                        <option value="Okra">{t("crops.okra")}</option>
+                                        <option value="Pea">{t("crops.pea")}</option>
+                                        <option value="Spinach">{t("crops.spinach")}</option>
                                     </optgroup>
-                                    <optgroup label="Fruits">
-                                        <option value="Mango">Mango</option>
-                                        <option value="Banana">Banana</option>
-                                        <option value="Grapes">Grapes</option>
-                                        <option value="Pomegranate">Pomegranate</option>
-                                        <option value="Papaya">Papaya</option>
-                                        <option value="Guava">Guava</option>
+                                    <optgroup label={t("cropCategories.fruits")}>
+                                        <option value="Mango">{t("crops.mango")}</option>
+                                        <option value="Banana">{t("crops.banana")}</option>
+                                        <option value="Grapes">{t("crops.grapes")}</option>
+                                        <option value="Pomegranate">{t("crops.pomegranate")}</option>
+                                        <option value="Papaya">{t("crops.papaya")}</option>
+                                        <option value="Guava">{t("crops.guava")}</option>
                                     </optgroup>
-                                    <optgroup label="Spices">
-                                        <option value="Turmeric">Turmeric</option>
-                                        <option value="Ginger">Ginger</option>
-                                        <option value="Garlic">Garlic</option>
-                                        <option value="Coriander">Coriander</option>
-                                        <option value="Cumin">Cumin</option>
+                                    <optgroup label={t("cropCategories.spices")}>
+                                        <option value="Turmeric">{t("crops.turmeric")}</option>
+                                        <option value="Ginger">{t("crops.ginger")}</option>
+                                        <option value="Garlic">{t("crops.garlic")}</option>
+                                        <option value="Coriander">{t("crops.coriander")}</option>
+                                        <option value="Cumin">{t("crops.cumin")}</option>
                                     </optgroup>
                                 </select>
                             </div>
                             <div>
-                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "4px" }}>Plantation Date</label>
+                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "4px" }}>{t("labelPlantationDate")}</label>
                                 <input type="date" className="input-field" value={currentDate} onChange={e => setCurrentDate(e.target.value)} />
                             </div>
                         </div>
 
                         <button type="button" onClick={addCrop} disabled={!currentCrop || !currentDate} style={{ width: "100%", padding: "10px", background: "var(--color-bg-secondary)", border: "1px dashed var(--color-border)", borderRadius: "8px", color: "var(--color-text-main)", fontWeight: 600, cursor: "pointer", marginBottom: "32px" }}>
-                            + Add Crop
+                            {t("btnAddCrop")}
                         </button>
 
                         <div style={{ display: "flex", gap: "12px" }}>
                             <button className="btn-secondary" onClick={() => setStep(2)} disabled={submitting} style={{ flex: 1 }}>
-                                ← Back
+                                {t("btnBack")}
                             </button>
                             <button
                                 className="btn-primary"
@@ -338,7 +340,7 @@ export default function OnboardingPage() {
                                 disabled={submitting}
                                 style={{ flex: 2 }}
                             >
-                                {submitting ? "Saving..." : "Save My Profile ✨"}
+                                {submitting ? t("btnSaving") : t("btnSave")}
                             </button>
                         </div>
                     </div>
