@@ -19,14 +19,18 @@ async def analyze_plant(
     description: str = Form(""),
     crop: str = Form(""),
 ):
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
         raise HTTPException(
             status_code=500,
-            detail="OPENAI_API_KEY not configured in .env file.",
+            detail="OPENROUTER_API_KEY not configured in .env file.",
         )
 
-    client = OpenAI(api_key=api_key)
+    # Initialize OpenRouter client
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key
+    )
 
     # 🔥 Read uploaded image
     image_bytes = await image.read()
@@ -82,7 +86,7 @@ Respond ONLY with valid JSON in this exact format:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="google/gemma-3-27b-it:free",
             messages=[
                 {
                     "role": "user",
@@ -97,7 +101,7 @@ Respond ONLY with valid JSON in this exact format:
                     ],
                 }
             ],
-            temperature=0.3,
+            temperature=0.1,
         )
 
         text = response.choices[0].message.content.strip()
@@ -121,5 +125,5 @@ Respond ONLY with valid JSON in this exact format:
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"OpenAI API error: {str(e)}",
+            detail=f"OpenRouter API error: {str(e)}",
         )
