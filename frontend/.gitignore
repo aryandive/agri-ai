@@ -39,7 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+<<<<<<< HEAD
 
 
 # clerk configuration (can include secrets)
 /.clerk/
+=======
+>>>>>>> origin/development
