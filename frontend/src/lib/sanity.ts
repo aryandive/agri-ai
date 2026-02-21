@@ -34,7 +34,33 @@ export const PRODUCT_QUERY = `*[_type == "product"] | order(isSponsored desc, _c
   inStock,
   tags,
   features,
-  specifications
+  specifications,
+  targetDiseases
+}`;
+
+export const PRODUCTS_BY_DISEASE_QUERY = `*[_type == "product" && (
+  (defined(targetDiseases) && $diseaseName in targetDiseases) ||
+  name match $diseaseName ||
+  (defined(tags) && length(tags[@ in $pesticides]) > 0)
+)] | order(isSponsored desc, _createdAt desc)[0...10] {
+  _id,
+  name,
+  slug,
+  "imageUrl": image.asset->url,
+  description,
+  price,
+  originalPrice,
+  discount,
+  category,
+  seller,
+  rating,
+  reviews,
+  isSponsored,
+  inStock,
+  tags,
+  features,
+  specifications,
+  targetDiseases
 }`;
 
 export const DISEASE_CURE_QUERY = `*[_type == "diseaseCure"] | order(_createdAt desc) {

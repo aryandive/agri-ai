@@ -2,8 +2,25 @@
 
 import { useState, useEffect, useRef, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { useUser } from "@clerk/nextjs";
+import { sanityClient, PRODUCTS_BY_DISEASE_QUERY } from "@/lib/sanity";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+interface Product {
+    _id: string;
+    name: string;
+    slug: { current: string };
+    imageUrl: string;
+    price: number;
+    originalPrice?: number;
+    discount?: number;
+    rating?: number;
+    reviews?: number;
+    inStock: boolean;
+    seller?: string;
+    isSponsored?: boolean;
+    targetDiseases?: string[];
+}
 
 interface AnalyzeResult {
     disease_name: string;
@@ -20,13 +37,21 @@ export default function CropDoctorPage() {
     const [description, setDescription] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AnalyzeResult | null>(null);
+    const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [dragover, setDragover] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [cart, setCart] = useState<any[]>([]);
 
     const { user, isLoaded } = useUser();
     const [myCrops, setMyCrops] = useState<string[]>([]);
     const [selectedCrop, setSelectedCrop] = useState("");
+
+    // Load cart from localStorage
+    useEffect(() => {
+        const savedCart = localStorage.getItem("agri_cart");
+        if (savedCart) setCart(JSON.parse(savedCart));
+    }, []);
 
     useEffect(() => {
         if (isLoaded && user) {
@@ -50,6 +75,7 @@ export default function CropDoctorPage() {
         setPreview(URL.createObjectURL(file));
         setError(null);
         setResult(null);
+        setRecommendedProducts([]);
     };
 
     const handleDrop = (e: DragEvent<HTMLDivElement>) => {
@@ -72,6 +98,7 @@ export default function CropDoctorPage() {
         setLoading(true);
         setError(null);
         setResult(null);
+        setRecommendedProducts([]);
 
         try {
             const formData = new FormData();
@@ -91,6 +118,23 @@ export default function CropDoctorPage() {
 
             const data: AnalyzeResult = await resp.json();
             setResult(data);
+
+            // Fetch products from Sanity matching the disease or pesticides
+            if (data.disease_name && data.disease_name !== "Healthy") {
+                try {
+                    const params = {
+                        diseaseName: data.disease_name,
+                        pesticides: data.pesticides && data.pesticides.length > 0 ? data.pesticides : ["__none__"] // GROQ needs a non-empty array for 'in'
+                    };
+                    const products = await sanityClient.fetch(PRODUCTS_BY_DISEASE_QUERY, params);
+                    setRecommendedProducts(products || []);
+                } catch (err) {
+                    console.error("Failed to fetch recommended products:", err);
+                    setError("Failed to fetch recommended products from the marketplace.");
+                }
+            } else {
+                setRecommendedProducts([]);
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Something went wrong.");
         } finally {
@@ -104,8 +148,25 @@ export default function CropDoctorPage() {
         setDescription("");
         setSelectedCrop("");
         setResult(null);
+        setRecommendedProducts([]);
         setError(null);
     };
+
+    const addToCart = (product: Product) => {
+        setCart((prev) => {
+            const existing = prev.find((c: any) => c.product._id === product._id);
+            let newCart;
+            if (existing) {
+                newCart = prev.map((c: any) => c.product._id === product._id ? { ...c, quantity: c.quantity + 1 } : c);
+            } else {
+                newCart = [...prev, { product, quantity: 1 }];
+            }
+            localStorage.setItem("agri_cart", JSON.stringify(newCart));
+            return newCart;
+        });
+    };
+
+    const getCartQty = (id: string) => cart.find((c: any) => c.product._id === id)?.quantity || 0;
 
     const confidenceBadgeClass = (c: string) => {
         const lower = c.toLowerCase();
@@ -327,6 +388,100 @@ export default function CropDoctorPage() {
                                     <li key={i} style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>{tip}</li>
                                 ))}
                             </ul>
+                        </div>
+                    )}
+
+                    {/* Recommended Cure Products */}
+                    {recommendedProducts.length > 0 && (
+                        <div className="glass-card" style={{ padding: "24px", marginTop: "16px" }}>
+                            <h4 style={{ fontWeight: 700, marginBottom: "16px", color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
+                                🛍️ Recommended Cure Products
+                            </h4>
+                            <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", marginBottom: "20px" }}>
+                                Directly treat {result.disease_name} with these highly rated solutions from our Marketplace:
+                            </p>
+
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "20px" }}>
+                                {recommendedProducts.map(product => (
+                                    <div key={product._id} style={{
+                                        background: "var(--color-bg-secondary)",
+                                        borderRadius: "16px",
+                                        padding: "16px",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "12px",
+                                        border: "1px solid var(--color-border)",
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                                        transition: "transform 0.2s, box-shadow 0.2s",
+                                        cursor: "pointer",
+                                    }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = "translateY(-4px)";
+                                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = "none";
+                                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
+                                        }}
+                                    >
+                                        {product.imageUrl && (
+                                            <div style={{ width: "100%", height: "160px", borderRadius: "10px", overflow: "hidden", background: "white", position: "relative" }}>
+                                                {product.isSponsored && (
+                                                    <span style={{ position: "absolute", top: "8px", left: "8px", background: "rgba(255, 193, 7, 0.9)", color: "#78350f", fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", textTransform: "uppercase", letterSpacing: "0.05em", backdropFilter: "blur(4px)" }}>
+                                                        Sponsored
+                                                    </span>
+                                                )}
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={product.imageUrl}
+                                                    alt={product.name}
+                                                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                                                />
+                                            </div>
+                                        )}
+                                        <div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+                                            <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "4px" }}>
+                                                {product.seller || "AgriMarket"}
+                                            </p>
+                                            <h5 style={{ fontWeight: 600, fontSize: "1rem", marginBottom: "6px", color: "var(--color-text-main)", lineHeight: 1.3 }}>
+                                                {product.name}
+                                            </h5>
+
+                                            <div style={{ marginTop: "auto" }}>
+                                                <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--color-primary)" }}>
+                                                    ₹{product.price?.toLocaleString("en-IN") || 0}
+                                                    {product.originalPrice && (
+                                                        <span style={{ fontSize: "0.85rem", color: "var(--color-text-dim)", textDecoration: "line-through", marginLeft: "8px", fontWeight: 400 }}>
+                                                            ₹{product.originalPrice.toLocaleString("en-IN")}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {getCartQty(product._id) > 0 ? (
+                                            <button
+                                                onClick={() => window.location.href = '/marketplace'}
+                                                style={{
+                                                    width: "100%", padding: "10px", borderRadius: "8px",
+                                                    background: "var(--color-bg-secondary)", color: "var(--color-text-main)",
+                                                    fontWeight: 600, fontSize: "0.9rem", border: "1px solid var(--color-primary)"
+                                                }}>
+                                                Added! ({getCartQty(product._id)}) - View Cart
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => addToCart(product)}
+                                                style={{
+                                                    width: "100%", padding: "10px", borderRadius: "8px",
+                                                    background: "var(--color-primary)", color: "white",
+                                                    fontWeight: 600, fontSize: "0.9rem", border: "none"
+                                                }}>
+                                                🛒 Add to Cart
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

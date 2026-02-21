@@ -75,3 +75,28 @@ class WeatherResponse(BaseModel):
     forecast: list[ForecastDay]
     hourly: list[HourlyForecast]
     advisory: Optional[AgriAdvisory] = None
+
+
+class PlannerRequest(BaseModel):
+    soil_type: Optional[str] = None
+    acres: Optional[float] = None
+    location: Optional[str] = None
+    water_availability: Optional[str] = None
+    mandi_prices: Optional[dict] = None
+
+
+class CropSuggestion(BaseModel):
+    crop: str
+    season: str
+    duration: str
+    yieldPerAcre: str
+    waterNeeded: str
+    seedRate: str
+    fertilizer: str
+    bestSoil: str
+    emoji: str
+    reasoning: str
+
+
+class PlannerResponse(BaseModel):
+    suggestions: list[CropSuggestion]

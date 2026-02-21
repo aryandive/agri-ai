@@ -106,6 +106,14 @@ export default defineType({
             of: [{ type: 'string' }],
         }),
         defineField({
+            name: 'targetDiseases',
+            title: 'Target Diseases (Cure)',
+            type: 'array',
+            of: [{ type: 'string' }],
+            description: 'List of diseases this product can cure or prevent (e.g., "Late Blight", "Powdery Mildew")',
+            options: { layout: 'tags' },
+        }),
+        defineField({
             name: 'specifications',
             title: 'Specifications',
             type: 'array',
