@@ -17,6 +17,7 @@ router = APIRouter(prefix="/api", tags=["analyze"])
 async def analyze_plant(
     image: UploadFile = File(...),
     description: str = Form(""),
+    crop: str = Form(""),
 ):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -74,6 +75,8 @@ Respond ONLY with valid JSON in this exact format:
 }
 """
 
+    if crop:
+        prompt += f"\nCrop diagnosed: {crop}"
     if description:
         prompt += f"\nAdditional farmer context: {description}"
 

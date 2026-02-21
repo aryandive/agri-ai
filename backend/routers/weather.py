@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import httpx
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 from models import (
     WeatherResponse, WeatherCurrent, ForecastDay, HourlyForecast,
@@ -16,7 +17,10 @@ OPENWEATHER_BASE = "https://api.openweathermap.org/data/2.5"
 
 
 @router.get("/weather", response_model=WeatherResponse)
-async def get_weather(city: str = Query(..., description="City name, e.g. 'Delhi'")):
+async def get_weather(
+    city: str = Query(..., description="City name, e.g. 'Delhi'"),
+    clerk_id: Optional[str] = None
+):
     """
     Returns current weather, hourly forecast, 5-day forecast,
     agriculture alerts, and crop-specific impact analysis.
@@ -133,8 +137,24 @@ async def get_weather(city: str = Query(..., description="City name, e.g. 'Delhi
             for d in list(daily.values())[:5]
         ]
 
+        # --- Fetch User Crops if available ---
+        farmer_crops = FARMER_CROPS
+        if clerk_id:
+            try:
+                from database import get_db
+                import json
+                db = await get_db()
+                async with db.execute("SELECT crops FROM user_profiles WHERE clerk_id = ?", (clerk_id,)) as cursor:
+                    row = await cursor.fetchone()
+                    if row and row[0]:
+                        parsed = json.loads(row[0])
+                        if isinstance(parsed, list) and len(parsed) > 0:
+                            farmer_crops = parsed
+            except Exception as e:
+                print("Error loading crops for weather advisory:", e)
+
         # --- Agriculture Advisory ---
-        advisory = _generate_advisory(current, forecast, hourly)
+        advisory = _generate_advisory(current, forecast, hourly, farmer_crops)
 
         return WeatherResponse(
             current=current,
@@ -144,7 +164,7 @@ async def get_weather(city: str = Query(..., description="City name, e.g. 'Delhi
         )
 
 
-def _generate_advisory(current: WeatherCurrent, forecast: list[ForecastDay], hourly: list[HourlyForecast]) -> AgriAdvisory:
+def _generate_advisory(current: WeatherCurrent, forecast: list[ForecastDay], hourly: list[HourlyForecast], farmer_crops: list) -> AgriAdvisory:
     """Generate agriculture alerts and crop-specific impact analysis."""
 
     alerts: list[WeatherAlert] = []
@@ -221,7 +241,7 @@ def _generate_advisory(current: WeatherCurrent, forecast: list[ForecastDay], hou
     crop_impacts: list[CropImpact] = []
     today = datetime.now().strftime("%Y-%m-%d")
 
-    for fc in FARMER_CROPS:
+    for fc in farmer_crops:
         crop_name = fc["crop"]
         if crop_name not in CROP_DATABASE:
             continue
