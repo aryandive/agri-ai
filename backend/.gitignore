@@ -1,3 +1,29 @@
+# Environments
 venv/
+env/
+.venv/
 backend/venv/
+
+# Security / Secrets (CRITICAL)
 .env
+.env.local
+*.pem
+
+# Database Files
+*.db
+*.sqlite3
+*.sqlite
+
+# Python Cache (Compiled code that Git doesn't need)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Next.js / Node (Just in case you run npm commands here by mistake)
+node_modules/
+
+# OS / IDE Files (Junk files created by Windows/Mac/VSCode)
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
