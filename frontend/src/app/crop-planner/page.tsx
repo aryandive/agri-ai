@@ -16,8 +16,6 @@ interface CropSuggestion {
     bestSoil: string;
     emoji: string;
     reasoning: string;
-    totalEstimatedYield: string;
-    totalEstimatedSeed: string;
 }
 
 export default function CropPlannerPage() {
@@ -135,8 +133,14 @@ export default function CropPlannerPage() {
             {/* Farm Context Bar */}
             <div className="glass-card animate-fade-in-up animate-delay-1" style={{ opacity: 0, padding: "20px", marginBottom: "24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", background: "rgba(20, 184, 166, 0.05)", borderLeft: "4px solid #14b8a6" }}>
                 <div>
-                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Auto-Detected Location</span>
-                    <p style={{ fontWeight: 600, color: "var(--color-text-main)", marginTop: "4px" }}>📍 {location}</p>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Location</span>
+                    <input
+                        type="text"
+                        value={location === "Fetching location..." ? "" : location}
+                        onChange={e => setLocation(e.target.value)}
+                        placeholder="e.g. Pune, Maharashtra"
+                        style={{ marginTop: "4px", padding: "6px 10px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)", borderRadius: "6px", width: "100%", fontSize: "0.9rem", color: "var(--color-text-main)" }}
+                    />
                 </div>
                 <div>
                     <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Soil Type</span>
@@ -244,19 +248,6 @@ export default function CropPlannerPage() {
                                         <p style={{ fontWeight: 600, color: "var(--color-text-main)", fontSize: "0.95rem" }}>{stat.value}</p>
                                     </div>
                                 ))}
-                            </div>
-
-                            {/* Totals Footer */}
-                            <div style={{ padding: "16px 24px", background: "var(--color-bg-secondary)", borderTop: "1px solid var(--color-border)", display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center" }}>
-                                <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", fontWeight: 600 }}>Total Estimates ({landArea} Acres):</span>
-                                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                    <div style={{ background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.3)", color: "#f59e0b", padding: "6px 12px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600 }}>
-                                        Seeds: <span style={{ color: "var(--color-text-main)" }}>{plan.totalEstimatedSeed}</span>
-                                    </div>
-                                    <div style={{ background: "rgba(20, 184, 166, 0.15)", border: "1px solid rgba(20, 184, 166, 0.3)", color: "#14b8a6", padding: "6px 12px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600 }}>
-                                        Yield: <span style={{ color: "var(--color-text-main)" }}>{plan.totalEstimatedYield}</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     ))}

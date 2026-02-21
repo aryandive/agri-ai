@@ -52,8 +52,6 @@ Based on the following farm context, suggest the 3 best crops the farmer should 
 
 CRITICAL INSTRUCTION FOR WATER: Analyze the provided 'Location' and evaluate whether it is considered a region with good water supply (like river basins/high rainfall) or if it is a drought-prone area. Factor this analysis and their declared 'Water Availability' heavily into your crop suggestions.
 
-CRITICAL INSTRUCTION FOR CALCULATIONS: Using the provided 'Land Area' of {request.acres} acres, calculate the EXACT numerical total estimated yield and the EXACT total estimated seeds needed for the entire farm area.
-
 FARM CONTEXT:
 {context_str}
 
@@ -70,9 +68,7 @@ Respond ONLY with valid JSON in this exact format, with no markdown formatting o
             "fertilizer": "E.g. Urea 50kg + DAP 25kg/acre",
             "bestSoil": "E.g. Loamy, Clay Loam",
             "emoji": "🌾",
-            "reasoning": "A short 1-sentence reason why this crop is highly recommended based on their specific soil, location, water supply, or market prices.",
-            "totalEstimatedYield": "E.g. 95 quintals",
-            "totalEstimatedSeed": "E.g. 225 kg"
+            "reasoning": "A short 1-sentence reason why this crop is highly recommended based on their specific soil, location, water supply, or market prices."
         }}
     ]
 }}

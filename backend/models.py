@@ -96,8 +96,6 @@ class CropSuggestion(BaseModel):
     bestSoil: str
     emoji: str
     reasoning: str
-    totalEstimatedYield: str
-    totalEstimatedSeed: str
 
 
 class PlannerResponse(BaseModel):
