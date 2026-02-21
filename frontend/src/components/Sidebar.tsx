@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const navItems = [
     {
-        label: "Home",
+        translationKey: "home",
         href: "/",
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -15,7 +16,7 @@ const navItems = [
         ),
     },
     {
-        label: "Crop Doctor",
+        translationKey: "cropDoctor",
         href: "/crop-doctor",
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,7 +26,7 @@ const navItems = [
         ),
     },
     {
-        label: "Weather",
+        translationKey: "weather",
         href: "/weather",
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,7 +35,7 @@ const navItems = [
         ),
     },
     {
-        label: "Mandi Prices",
+        translationKey: "mandi",
         href: "/mandi",
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -44,7 +45,7 @@ const navItems = [
         ),
     },
     {
-        label: "News",
+        translationKey: "news",
         href: "/news",
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -56,7 +57,7 @@ const navItems = [
         ),
     },
     {
-        label: "Marketplace",
+        translationKey: "marketplace",
         href: "/marketplace",
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -67,7 +68,7 @@ const navItems = [
         ),
     },
     {
-        label: "Profile",
+        translationKey: "profile",
         href: "/profile",
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -80,6 +81,7 @@ const navItems = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const t = useTranslations("Sidebar");
 
     return (
         <aside className="sidebar">
@@ -103,7 +105,7 @@ export default function Sidebar() {
                         className={`nav-link ${pathname === item.href ? "active" : ""}`}
                     >
                         {item.icon}
-                        <span>{item.label}</span>
+                        <span>{t(item.translationKey)}</span>
                     </Link>
                 ))}
             </nav>
@@ -113,7 +115,7 @@ export default function Sidebar() {
                     🌾 Agri AI v1.0
                 </p>
                 <p style={{ fontSize: "0.7rem", color: "var(--color-text-dim)", marginTop: "4px" }}>
-                    Smart Farming Assistant
+                    {t("subtitle")}
                 </p>
             </div>
         </aside>

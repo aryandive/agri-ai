@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { useUser, SignOutButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function DashboardPage() {
     const { user, isLoaded } = useUser();
     const router = useRouter();
+    const t = useTranslations("Dashboard");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [profile, setProfile] = useState<any>(null);
@@ -107,23 +109,23 @@ export default function DashboardPage() {
     };
 
     if (loading) {
-        return <div style={{ padding: "40px", textAlign: "center", fontSize: "1.2rem", color: "var(--color-text-muted)" }}>Loading your farm data...</div>;
+        return <div style={{ padding: "40px", textAlign: "center", fontSize: "1.2rem", color: "var(--color-text-muted)" }}>{t("loading")}</div>;
     }
 
     if (error) {
         return (
             <div style={{ padding: "40px", textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
-                <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "16px" }}>⚠️ Connection Error</h2>
+                <h2 style={{ fontSize: "1.5rem", color: "var(--color-primary)", marginBottom: "16px" }}>{t("errorTitle")}</h2>
                 <p style={{ color: "var(--color-text-muted)", marginBottom: "24px" }}>{error}</p>
                 <button onClick={fetchProfile} className="btn-primary" style={{ padding: "10px 24px" }}>
-                    Retry Connection
+                    {t("btnRetry")}
                 </button>
             </div>
         );
     }
 
     if (!profile) {
-        return <div style={{ padding: "40px", textAlign: "center" }}>Loading your farm data...</div>;
+        return <div style={{ padding: "40px", textAlign: "center" }}>{t("loading")}</div>;
     }
 
     // Calculate days since planted
@@ -142,19 +144,19 @@ export default function DashboardPage() {
             <div className="animate-fade-in-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px", flexWrap: "wrap", gap: "16px" }}>
                 <div>
                     <p style={{ color: "var(--color-primary-light)", fontWeight: 600, fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        🌾 Personalized Dashboard
+                        {t("tag")}
                     </p>
                     <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif" }}>
-                        Welcome back, <span className="gradient-text">{profile.name.split(" ")[0]}</span>
+                        {t("welcome")}<span className="gradient-text">{profile.name.split(" ")[0]}</span>
                     </h1>
                 </div>
                 <div style={{ display: "flex", gap: "12px" }}>
                     <Link href="/profile" style={{ padding: "8px 16px", borderRadius: "8px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)", color: "var(--color-text-main)", textDecoration: "none", fontSize: "0.85rem", fontWeight: 600 }}>
-                        <span>👤</span> Profile
+                        {t("btnProfile")}
                     </Link>
                     <SignOutButton>
                         <button style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid var(--color-danger)", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", cursor: "pointer", fontSize: "0.85rem", fontWeight: 600 }}>
-                            Sign Out
+                            {t("btnSignOut")}
                         </button>
                     </SignOutButton>
                 </div>
@@ -168,15 +170,15 @@ export default function DashboardPage() {
                     <div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span>🌤️</span> Local Weather
+                                {t("widgetWeather")}
                             </h2>
                             <Link href="/weather" style={{ fontSize: "0.85rem", color: "var(--color-primary-light)", textDecoration: "none", fontWeight: 600 }}>
-                                View Full Forecast →
+                                {t("viewFullForecast")}
                             </Link>
                         </div>
 
                         {weatherLoading ? (
-                            <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>Loading weather data...</div>
+                            <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>{t("weatherLoading")}</div>
                         ) : weatherData ? (
                             <div style={{ display: "flex", alignItems: "center", gap: "20px", background: "var(--color-bg-secondary)", padding: "16px", borderRadius: "12px", border: "1px solid var(--color-border)" }}>
                                 <div style={{ textAlign: "center" }}>
@@ -200,7 +202,7 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>Weather unavailable</div>
+                            <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>{t("weatherUnavailable")}</div>
                         )}
                     </div>
 
@@ -217,15 +219,15 @@ export default function DashboardPage() {
                 <div className="glass-card animate-fade-in-up animate-delay-2" style={{ padding: "24px", display: "flex", flexDirection: "column" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                         <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>💰</span> My Crop Prices
+                            {t("widgetMandi")}
                         </h2>
                         <Link href="/mandi" style={{ fontSize: "0.85rem", color: "var(--color-primary-light)", textDecoration: "none", fontWeight: 600 }}>
-                            View Mandi →
+                            {t("viewMandi")}
                         </Link>
                     </div>
 
                     {mandiLoading ? (
-                        <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>Loading market prices...</div>
+                        <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>{t("mandiLoading")}</div>
                     ) : mandiPrices.length > 0 ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                             {mandiPrices.map((p, i) => (
@@ -238,7 +240,7 @@ export default function DashboardPage() {
                                         <p style={{ fontWeight: 700, color: "var(--color-primary-light)", fontSize: "1.1rem", fontFamily: "Outfit, sans-serif" }}>
                                             ₹{p.modal_price?.toLocaleString() || "N/A"}
                                         </p>
-                                        <p style={{ fontSize: "0.7rem", color: "var(--color-text-dim)" }}>per quintal</p>
+                                        <p style={{ fontSize: "0.7rem", color: "var(--color-text-dim)" }}>{t("perQuintal")}</p>
                                     </div>
                                 </div>
                             ))}
@@ -246,7 +248,7 @@ export default function DashboardPage() {
                     ) : (
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "var(--color-bg-secondary)", borderRadius: "12px", border: "1px dashed var(--color-border)", padding: "20px", textAlign: "center" }}>
                             <p style={{ fontSize: "2rem", marginBottom: "8px" }}>📉</p>
-                            <p style={{ fontSize: "0.9rem", color: "var(--color-text-muted)" }}>No recent prices found for your crops.</p>
+                            <p style={{ fontSize: "0.9rem", color: "var(--color-text-muted)" }}>{t("mandiEmpty").replace("📉 ", "")}</p>
                         </div>
                     )}
                 </div>
@@ -255,14 +257,14 @@ export default function DashboardPage() {
             {/* Quick Actions Grid */}
             <div className="animate-fade-in-up animate-delay-2" style={{ marginBottom: "32px" }}>
                 <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "16px", color: "var(--color-text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span>⚡</span> Quick Actions
+                    {t("widgetQuick")}
                 </h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
                     {[
-                        { title: "Crop Doctor", desc: "Diagnose diseases", icon: "🔬", href: "/crop-doctor", bg: "linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(21, 128, 61, 0.1))", border: "rgba(22, 163, 74, 0.3)" },
-                        { title: "Marketplace", desc: "Buy & sell goods", icon: "🛒", href: "/marketplace", bg: "linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(190, 24, 93, 0.1))", border: "rgba(236, 72, 153, 0.3)" },
-                        { title: "Crop Planner", desc: "Plan new cycle", icon: "📋", href: "/crop-planner", bg: "linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(13, 148, 136, 0.1))", border: "rgba(20, 184, 166, 0.3)" },
-                        { title: "News & Schemes", desc: "Govt updates", icon: "📰", href: "/news", bg: "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(109, 40, 217, 0.1))", border: "rgba(139, 92, 246, 0.3)" }
+                        { title: t("quickCropDoctor"), desc: t("quickCropDoctorDesc"), icon: "🔬", href: "/crop-doctor", bg: "linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(21, 128, 61, 0.1))", border: "rgba(22, 163, 74, 0.3)" },
+                        { title: t("quickMarketplace"), desc: t("quickMarketplaceDesc"), icon: "🛒", href: "/marketplace", bg: "linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(190, 24, 93, 0.1))", border: "rgba(236, 72, 153, 0.3)" },
+                        { title: t("quickPlanner"), desc: t("quickPlannerDesc"), icon: "📋", href: "/crop-planner", bg: "linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(13, 148, 136, 0.1))", border: "rgba(20, 184, 166, 0.3)" },
+                        { title: t("quickNews"), desc: t("quickNewsDesc"), icon: "📰", href: "/news", bg: "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(109, 40, 217, 0.1))", border: "rgba(139, 92, 246, 0.3)" }
                     ].map((act, i) => (
                         <Link href={act.href} key={i} style={{ textDecoration: "none" }}>
                             <div className="glass-card" style={{ padding: "20px", background: act.bg, borderColor: act.border, display: "flex", alignItems: "center", gap: "16px" }}>
@@ -283,19 +285,19 @@ export default function DashboardPage() {
                 {/* Farm Overview Card */}
                 <div className="glass-card animate-fade-in-up animate-delay-3" style={{ padding: "24px" }}>
                     <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "16px", color: "var(--color-text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span>🗺️</span> Farm Overview
+                        {t("widgetFarmOverview")}
                     </h2>
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--color-border)" }}>
-                            <span style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>Total Area:</span>
-                            <span style={{ fontWeight: 600, color: "var(--color-text-main)" }}>{profile.land_area_acres} Acres</span>
+                            <span style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>{t("farmArea")}</span>
+                            <span style={{ fontWeight: 600, color: "var(--color-text-main)" }}>{profile.land_area_acres} {t("acres")}</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--color-border)" }}>
-                            <span style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>Soil Type:</span>
-                            <span style={{ fontWeight: 600, color: "var(--color-text-main)", textTransform: "capitalize" }}>{profile.soil_type} Soil</span>
+                            <span style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>{t("farmSoil")}</span>
+                            <span style={{ fontWeight: 600, color: "var(--color-text-main)", textTransform: "capitalize" }}>{profile.soil_type} {t("soilSuffix")}</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "12px" }}>
-                            <span style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>Location:</span>
+                            <span style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>{t("farmLocation")}</span>
                             <span style={{ fontWeight: 600, color: "var(--color-primary-light)" }}>Lat: {profile.location_lat?.toFixed(2)}, Lng: {profile.location_lng?.toFixed(2)}</span>
                         </div>
                     </div>
@@ -305,7 +307,7 @@ export default function DashboardPage() {
                 <div className="glass-card animate-fade-in-up animate-delay-3" style={{ padding: "24px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                         <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>🌱</span> Crop Growth Status
+                            {t("widgetCropStatus")}
                         </h2>
                     </div>
                     {profile.crops && profile.crops.length > 0 ? (
@@ -314,26 +316,26 @@ export default function DashboardPage() {
                             {profile.crops.map((c: any, i: number) => {
                                 const days = getDaysSince(c.planted_date);
                                 // Simple mock logic for maturity stage
-                                let stage = "Seedling";
+                                let stage = t("stageSeedling");
                                 let progress = 20;
                                 let color = "#3b82f6";
-                                let advice = "Ensure adequate watering.";
+                                let advice = t("adviceSeedling");
 
                                 if (days > 30 && days <= 60) {
-                                    stage = "Vegetative";
+                                    stage = t("stageVegetative");
                                     progress = 50;
                                     color = "#10b981";
-                                    advice = "Apply Nitrogen fertilizer (Urea). Check for early pests.";
+                                    advice = t("adviceVegetative");
                                 } else if (days > 60 && days <= 90) {
-                                    stage = "Flowering / Grain Filling";
+                                    stage = t("stageFlowering");
                                     progress = 80;
                                     color = "#f59e0b";
-                                    advice = "🛑 High disease risk. Pre-emptive fungicide spray recommended.";
+                                    advice = t("adviceFlowering");
                                 } else if (days > 90) {
-                                    stage = "Maturity / Harvest Ready";
+                                    stage = t("stageMaturity");
                                     progress = 100;
                                     color = "#f43f5e";
-                                    advice = "Prepare for harvest. Withhold watering 1 week prior.";
+                                    advice = t("adviceMaturity");
                                 }
 
                                 return (
@@ -341,7 +343,7 @@ export default function DashboardPage() {
                                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", alignItems: "center" }}>
                                             <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--color-text-main)" }}>{c.crop}</span>
                                             <span style={{ fontSize: "0.8rem", color: color, fontWeight: 700, background: `${color}20`, padding: "4px 10px", borderRadius: "999px" }}>
-                                                Day {days}: {stage}
+                                                {t("dayPrefix", { day: days, stage })}
                                             </span>
                                         </div>
 
@@ -353,7 +355,7 @@ export default function DashboardPage() {
                                         <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", borderLeft: `3px solid ${color}` }}>
                                             <span style={{ fontSize: "1.2rem" }}>🤖</span>
                                             <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", lineHeight: 1.5 }}>
-                                                <strong style={{ color: "var(--color-text-main)", marginRight: "4px" }}>AI Action:</strong> {advice}
+                                                <strong style={{ color: "var(--color-text-main)", marginRight: "4px" }}>{t("aiAction")}</strong> {advice}
                                             </p>
                                         </div>
                                     </div>
@@ -363,7 +365,7 @@ export default function DashboardPage() {
                     ) : (
                         <div style={{ padding: "32px 24px", textAlign: "center", color: "var(--color-text-muted)", background: "var(--color-bg-secondary)", borderRadius: "12px", border: "1px dashed var(--color-border)" }}>
                             <p style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🌾</p>
-                            <p style={{ fontSize: "0.95rem" }}>No crops planted currently.</p>
+                            <p style={{ fontSize: "0.95rem" }}>{t("cropsEmpty").replace("🌾 ", "")}</p>
                         </div>
                     )}
                 </div>
@@ -373,7 +375,7 @@ export default function DashboardPage() {
             {profile.crops && profile.crops.length > 0 && (
                 <div className="glass-card animate-fade-in-up animate-delay-4" style={{ padding: "24px", marginBottom: "32px" }}>
                     <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "20px", color: "var(--color-text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span>📋</span> Crop Process Checklist
+                        {t("widgetChecklist")}
                     </h2>
                     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -382,14 +384,14 @@ export default function DashboardPage() {
 
                             // Crop lifecycle stages: [label, startDay, endDay, tasks]
                             const stages = [
-                                { label: "Land Prep & Sowing", icon: "🌱", day: 0, tasks: ["Till and level soil", "Apply basal fertilizer (DAP/SSP)", "Sow seeds at correct depth", "Ensure proper spacing"] },
-                                { label: "Germination", icon: "🌿", day: 7, tasks: ["Check germination rate", "Re-sow if gaps > 20%", "Light irrigation daily"] },
-                                { label: "Vegetative Growth", icon: "🍃", day: 21, tasks: ["Apply Nitrogen (Urea) top dressing", "Weed control (manual/herbicide)", "First pest scouting"] },
-                                { label: "Branching / Tillering", icon: "🌾", day: 40, tasks: ["Irrigation every 7–10 days", "Potassium application if needed", "Monitor for aphids / whitefly"] },
-                                { label: "Flowering", icon: "🌸", day: 60, tasks: ["Avoid irrigation stress", "Spray micronutrients (zinc/boron)", "Fungicide spray to prevent blight"] },
-                                { label: "Grain / Fruit Filling", icon: "🫘", day: 80, tasks: ["Maintain soil moisture", "Monitor for stem borer / pod borer", "Apply K2SO4 if fruiting is poor"] },
-                                { label: "Ripening", icon: "🟡", day: 100, tasks: ["Reduce irrigation gradually", "Watch for lodging / premature drop", "Arrange harvesting equipment"] },
-                                { label: "Harvest", icon: "🚜", day: 120, tasks: ["Harvest at moisture < 20%", "Dry before storage", "Record yield per acre"] },
+                                { label: t("stageLabelLand"), icon: "🌱", day: 0, tasks: [t("taskLand1"), t("taskLand2"), t("taskLand3"), t("taskLand4")] },
+                                { label: t("stageLabelGerm"), icon: "🌿", day: 7, tasks: [t("taskGerm1"), t("taskGerm2"), t("taskGerm3")] },
+                                { label: t("stageLabelVeg"), icon: "🍃", day: 21, tasks: [t("taskVeg1"), t("taskVeg2"), t("taskVeg3")] },
+                                { label: t("stageLabelBranch"), icon: "🌾", day: 40, tasks: [t("taskBranch1"), t("taskBranch2"), t("taskBranch3")] },
+                                { label: t("stageLabelFlow"), icon: "🌸", day: 60, tasks: [t("taskFlow1"), t("taskFlow2"), t("taskFlow3")] },
+                                { label: t("stageLabelGrain"), icon: "🫘", day: 80, tasks: [t("taskGrain1"), t("taskGrain2"), t("taskGrain3")] },
+                                { label: t("stageLabelRipe"), icon: "🟡", day: 100, tasks: [t("taskRipe1"), t("taskRipe2"), t("taskRipe3")] },
+                                { label: t("stageLabelHarv"), icon: "🚜", day: 120, tasks: [t("taskHarv1"), t("taskHarv2"), t("taskHarv3")] },
                             ];
 
                             return (
@@ -402,7 +404,7 @@ export default function DashboardPage() {
                                             <p style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--color-primary-light)" }}>
                                                 🌾 {c.crop}
                                             </p>
-                                            <span style={{ fontSize: "0.85rem", background: "rgba(255,255,255,0.05)", padding: "4px 10px", borderRadius: "999px", color: "var(--color-text-muted)" }}>planted {days} days ago</span>
+                                            <span style={{ fontSize: "0.85rem", background: "rgba(255,255,255,0.05)", padding: "4px 10px", borderRadius: "999px", color: "var(--color-text-muted)" }}>{t("plantedAgo", { days })}</span>
                                         </div>
                                         <span style={{ fontSize: "1rem", color: "var(--color-text-dim)", transform: expandedCrops[idx] ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</span>
                                     </div>
@@ -443,12 +445,12 @@ export default function DashboardPage() {
                                                                 </span>
                                                                 {isCurrent && (
                                                                     <span style={{ fontSize: "0.7rem", background: "rgba(245,158,11,0.15)", color: "#f59e0b", padding: "4px 10px", borderRadius: "999px", fontWeight: 700, letterSpacing: "0.5px" }}>
-                                                                        ← CURRENT STAGE
+                                                                        {t("stageCurrent")}
                                                                     </span>
                                                                 )}
                                                                 {isUpcoming && daysUntil > 0 && (
                                                                     <span style={{ fontSize: "0.7rem", background: "var(--color-bg-main)", color: "var(--color-text-dim)", padding: "4px 10px", borderRadius: "999px", border: "1px solid var(--color-border)" }}>
-                                                                        in {daysUntil} days
+                                                                        {t("stageInDays", { days: daysUntil })}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -459,7 +461,7 @@ export default function DashboardPage() {
                                                                     background: "rgba(245,158,11,0.05)", border: "1px dashed rgba(245,158,11,0.3)",
                                                                     borderRadius: "8px", padding: "14px", marginTop: "12px"
                                                                 }}>
-                                                                    <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#f59e0b", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Action Items:</p>
+                                                                    <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#f59e0b", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("actionItems")}</p>
                                                                     <ul style={{ margin: 0, paddingLeft: "20px", color: "var(--color-text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "6px" }}>
                                                                         {stage.tasks.map((task, ti) => (
                                                                             <li key={ti}>{task}</li>

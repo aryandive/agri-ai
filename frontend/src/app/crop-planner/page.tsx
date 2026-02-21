@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface CropPlan {
     crop: string;
@@ -28,6 +29,7 @@ const cropData: Record<string, CropPlan> = {
 const cropOptions = Object.keys(cropData);
 
 export default function CropPlannerPage() {
+    const t = useTranslations("CropPlanner");
     const [selectedCrop, setSelectedCrop] = useState("");
     const [landArea, setLandArea] = useState("");
     const [plan, setPlan] = useState<CropPlan | null>(null);
@@ -67,10 +69,10 @@ export default function CropPlannerPage() {
                     📋 Plan Your Season
                 </p>
                 <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif", marginBottom: "8px" }}>
-                    <span className="gradient-text">Crop Planner</span>
+                    <span className="gradient-text">{t("title")}</span>
                 </h1>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-                    Select a crop and land area to get yield estimates, seed requirements, and farming guidelines.
+                    {t("description")}
                 </p>
             </div>
 
@@ -79,7 +81,7 @@ export default function CropPlannerPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
                     <div>
                         <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "8px" }}>
-                            Select Crop
+                            {t("selectCrop")}
                         </label>
                         <select
                             className="input-field"
@@ -88,7 +90,7 @@ export default function CropPlannerPage() {
                             id="crop-planner-select"
                             style={{ cursor: "pointer" }}
                         >
-                            <option value="">Choose a crop...</option>
+                            <option value="">{t("chooseCrop")}</option>
                             {cropOptions.map((c) => (
                                 <option key={c} value={c}>
                                     {cropData[c].emoji} {cropData[c].crop}
@@ -98,12 +100,12 @@ export default function CropPlannerPage() {
                     </div>
                     <div>
                         <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "8px" }}>
-                            Land Area (acres)
+                            {t("landArea")}
                         </label>
                         <input
                             type="number"
                             className="input-field"
-                            placeholder="e.g. 5"
+                            placeholder={t("placeholderArea")}
                             value={landArea}
                             onChange={(e) => setLandArea(e.target.value)}
                             min="0.1"
@@ -117,7 +119,7 @@ export default function CropPlannerPage() {
                     onClick={handlePlan}
                     disabled={!selectedCrop || !landArea}
                 >
-                    📊 Generate Plan
+                    {t("generatePlan")}
                 </button>
             </div>
 
@@ -153,12 +155,12 @@ export default function CropPlannerPage() {
                         {/* Stats Grid */}
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
                             {[
-                                { label: "Yield / Acre", value: plan.yieldPerAcre, emoji: "📦" },
-                                { label: "Seed Rate", value: plan.seedRate, emoji: "🌱" },
-                                { label: "Water Needed", value: plan.waterNeeded, emoji: "💧" },
-                                { label: "Fertilizer", value: plan.fertilizer, emoji: "🧪" },
-                                { label: "Best Soil Type", value: plan.bestSoil, emoji: "🏔️" },
-                                { label: "Growth Duration", value: plan.duration, emoji: "⏱️" },
+                                { label: t("yieldPerAcre"), value: plan.yieldPerAcre, emoji: "📦" },
+                                { label: t("seedRate"), value: plan.seedRate, emoji: "🌱" },
+                                { label: t("waterNeeded"), value: plan.waterNeeded, emoji: "💧" },
+                                { label: t("fertilizer"), value: plan.fertilizer, emoji: "🧪" },
+                                { label: t("bestSoilType"), value: plan.bestSoil, emoji: "🏔️" },
+                                { label: t("growthDuration"), value: plan.duration, emoji: "⏱️" },
                             ].map((stat) => (
                                 <div key={stat.label} style={{
                                     background: "var(--color-bg-secondary)",
@@ -178,7 +180,7 @@ export default function CropPlannerPage() {
                     {calculations && (
                         <div className="glass-card" style={{ padding: "24px" }}>
                             <h3 style={{ fontWeight: 700, marginBottom: "16px", color: "#14b8a6" }}>
-                                📐 Calculations for {landArea} acres
+                                {t("calculationsTitle", { acres: landArea })}
                             </h3>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                                 <div style={{
@@ -188,7 +190,7 @@ export default function CropPlannerPage() {
                                     border: "1px solid rgba(20, 184, 166, 0.2)",
                                     textAlign: "center",
                                 }}>
-                                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "6px" }}>Expected Total Yield</p>
+                                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "6px" }}>{t("totalYield")}</p>
                                     <p style={{ fontSize: "1.4rem", fontWeight: 800, color: "#14b8a6", fontFamily: "Outfit, sans-serif" }}>
                                         {calculations.totalYield}
                                     </p>
@@ -200,7 +202,7 @@ export default function CropPlannerPage() {
                                     border: "1px solid rgba(245, 158, 11, 0.2)",
                                     textAlign: "center",
                                 }}>
-                                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "6px" }}>Total Seed Required</p>
+                                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "6px" }}>{t("totalSeed")}</p>
                                     <p style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--color-accent)", fontFamily: "Outfit, sans-serif" }}>
                                         {calculations.totalSeed}
                                     </p>
@@ -216,7 +218,7 @@ export default function CropPlannerPage() {
                 <div className="glass-card animate-fade-in-up animate-delay-2" style={{ opacity: 0, padding: "48px", textAlign: "center" }}>
                     <p style={{ fontSize: "3rem", marginBottom: "12px" }}>🌾</p>
                     <p style={{ color: "var(--color-text-muted)", fontSize: "1rem" }}>
-                        Select a crop and enter your land area above to generate a farming plan
+                        {t("emptyStateTitle")}
                     </p>
                     <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
                         {["wheat", "rice", "potato", "tomato"].map((c) => (
