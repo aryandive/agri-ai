@@ -1,0 +1,5 @@
+a1496c6b Resolve merge conflicts with development branch
+47166774 added new language and dark/light mode
+acff4e61 Merge pull request #8 from aryandive/feature/crop-doctor
+165c34b3 Merge branch 'development' into feature/crop-doctor
+09423bbe crop planner done
