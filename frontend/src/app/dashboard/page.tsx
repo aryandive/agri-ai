@@ -16,6 +16,8 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expandedCrops, setExpandedCrops] = useState<Record<number, boolean>>({});
+    const [customSchedules, setCustomSchedules] = useState<Record<string, any[]>>({});
+    const [customSchedules, setCustomSchedules] = useState<Record<string, any[]>>({});
 
     // New states for dashboard widgets
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
