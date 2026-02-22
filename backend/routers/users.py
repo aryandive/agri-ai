@@ -1,8 +1,10 @@
 import json
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
-from database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from pg_database import get_pg_db, UserProfile
 
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -14,6 +16,14 @@ class CropInput(BaseModel):
     soil_type: Optional[str] = None
 
 
+class AddressInput(BaseModel):
+    street: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip: Optional[str] = None
+    phone: Optional[str] = None
+
+
 class ProfileInput(BaseModel):
     clerk_id: str
     name: Optional[str] = None
@@ -22,72 +32,67 @@ class ProfileInput(BaseModel):
     location_lat: Optional[float] = None
     location_lng: Optional[float] = None
     crops: Optional[List[CropInput]] = []
+    preferred_language: Optional[str] = "en"
+    address: Optional[AddressInput] = None
 
 
 @router.post("/profile")
-async def save_profile(data: ProfileInput):
-    """Create or update a user profile in local SQLite."""
-    db = await get_db()
-    try:
-        crops_json = json.dumps([c.dict() for c in data.crops] if data.crops else [])
+async def save_profile(data: ProfileInput, db: AsyncSession = Depends(get_pg_db)):
+    """Create or update a user profile in Neon PostgreSQL."""
+    stmt = select(UserProfile).where(UserProfile.clerk_id == data.clerk_id)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
 
-        existing = await db.execute(
-            "SELECT id FROM user_profiles WHERE clerk_id = ?", (data.clerk_id,)
+    crops_data = [c.dict() for c in (data.crops or [])]
+
+    if user:
+        user.name = data.name if data.name is not None else user.name
+        user.land_area_acres = data.land_area_acres if data.land_area_acres is not None else user.land_area_acres
+        user.soil_type = data.soil_type if data.soil_type is not None else user.soil_type
+        user.location_lat = data.location_lat if data.location_lat is not None else user.location_lat
+        user.location_lng = data.location_lng if data.location_lng is not None else user.location_lng
+        user.crops = crops_data
+        user.preferred_language = data.preferred_language if data.preferred_language is not None else user.preferred_language
+        if data.address is not None:
+             user.address = data.address.dict()
+    else:
+        user = UserProfile(
+            clerk_id=data.clerk_id,
+            name=data.name,
+            land_area_acres=data.land_area_acres,
+            soil_type=data.soil_type,
+            location_lat=data.location_lat,
+            location_lng=data.location_lng,
+            crops=crops_data,
+            preferred_language=data.preferred_language,
+            address=data.address.dict() if data.address is not None else None
         )
-        row = await existing.fetchone()
+        db.add(user)
 
-        if row:
-            await db.execute(
-                """UPDATE user_profiles SET
-                    name = COALESCE(?, name),
-                    land_area_acres = COALESCE(?, land_area_acres),
-                    soil_type = COALESCE(?, soil_type),
-                    location_lat = COALESCE(?, location_lat),
-                    location_lng = COALESCE(?, location_lng),
-                    crops = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE clerk_id = ?""",
-                (data.name, data.land_area_acres, data.soil_type,
-                 data.location_lat, data.location_lng, crops_json, data.clerk_id)
-            )
-        else:
-            await db.execute(
-                """INSERT INTO user_profiles
-                    (clerk_id, name, land_area_acres, soil_type, location_lat, location_lng, crops)
-                VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (data.clerk_id, data.name, data.land_area_acres, data.soil_type,
-                 data.location_lat, data.location_lng, crops_json)
-            )
-
-        await db.commit()
-        return {"status": "success", "message": "Profile saved."}
-    finally:
-        await db.close()
+    await db.commit()
+    return {"status": "success", "message": "Profile saved."}
 
 
 @router.get("/profile/{clerk_id}")
-async def get_profile(clerk_id: str):
-    """Fetch user profile from local SQLite."""
-    db = await get_db()
-    try:
-        cursor = await db.execute(
-            "SELECT * FROM user_profiles WHERE clerk_id = ?", (clerk_id,)
-        )
-        row = await cursor.fetchone()
+async def get_profile(clerk_id: str, db: AsyncSession = Depends(get_pg_db)):
+    """Fetch user profile from Neon PostgreSQL."""
+    stmt = select(UserProfile).where(UserProfile.clerk_id == clerk_id)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
 
-        if not row:
-            raise HTTPException(status_code=404, detail="Profile not found")
+    if not user:
+        raise HTTPException(status_code=404, detail="Profile not found")
 
-        crops = json.loads(row["crops"] or "[]")
-
-        return {
-            "clerk_id": row["clerk_id"],
-            "name": row["name"],
-            "land_area_acres": row["land_area_acres"],
-            "soil_type": row["soil_type"],
-            "location_lat": row["location_lat"],
-            "location_lng": row["location_lng"],
-            "crops": crops,
-        }
-    finally:
-        await db.close()
+    return {
+        "clerk_id": user.clerk_id,
+        "name": user.name,
+        "land_area_acres": user.land_area_acres,
+        "soil_type": user.soil_type,
+        "location_lat": user.location_lat,
+        "location_lng": user.location_lng,
+        "subscription_tier": user.subscription_tier,
+        "crop_doctor_uses": user.crop_doctor_uses,
+        "crops": user.crops or [],
+        "preferred_language": user.preferred_language,
+        "address": user.address or {},
+    }

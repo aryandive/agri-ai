@@ -7,7 +7,7 @@ import os
 # Load .env BEFORE importing routers (they read env vars at module level)
 load_dotenv(override=True)
 
-from routers import analyze, weather, mandi, news, users, planner
+from routers import analyze, weather, mandi, news, users, planner, assistant
 from database import init_db
 from pg_database import init_pg_db
 from scheduler import start_scheduler, stop_scheduler
@@ -54,6 +54,7 @@ app.include_router(mandi.router)
 app.include_router(news.router)
 app.include_router(users.router)
 app.include_router(planner.router)
+app.include_router(assistant.router)
 
 @app.get("/")
 def read_root():

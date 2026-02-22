@@ -2,15 +2,28 @@ import os
 import json
 import base64
 import io
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from dotenv import load_dotenv
 from openai import OpenAI
 from PIL import Image
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
 from models import AnalyzeResponse
+from pg_database import get_pg_db, UserProfile
 
 load_dotenv()
 
 router = APIRouter(prefix="/api", tags=["analyze"])
+
+LANGUAGES = {
+    "en": "English",
+    "hi": "Hindi",
+    "pa": "Punjabi",
+    "te": "Telugu",
+    "ta": "Tamil",
+    "mr": "Marathi",
+    "gu": "Gujarati"
+}
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -18,7 +31,30 @@ async def analyze_plant(
     image: UploadFile = File(...),
     description: str = Form(""),
     crop: str = Form(""),
+    clerk_id: str = Form(""),
+    user_role: str = Form("free_user"), # Default to free if not provided
+    db: AsyncSession = Depends(get_pg_db)
 ):
+    if not clerk_id:
+        raise HTTPException(status_code=401, detail="Unauthorized. User ID missing.")
+        
+    # Check subscription & usage limits
+    stmt = select(UserProfile).where(UserProfile.clerk_id == clerk_id)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User profile not found. Please complete onboarding.")
+
+    # Only enforce limits if the user is NOT a premium subscriber/admin in Clerk
+    role_to_check = (user_role or "").lower()
+    is_premium = role_to_check in ["subscribed", "admin"]
+        
+    if not is_premium and user.crop_doctor_uses >= 3:
+        raise HTTPException(
+            status_code=403, 
+            detail="limit_reached" # Specific keyword for frontend to show upgrade modal
+        )
     api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
         raise HTTPException(
@@ -77,6 +113,9 @@ Respond ONLY with valid JSON in this exact format:
     "pesticides": ["Treatment 1", "Treatment 2"],
     "prevention_tips": ["Tip 1", "Tip 2", "Tip 3"]
 }
+
+IMPORTANT: All text values (description, cure_steps, pesticides, prevention_tips) MUST be written in {LANGUAGES.get(user.preferred_language, 'English')}.
+The "disease_name" and "confidence" should remain in English.
 """
 
     if crop:
@@ -86,7 +125,7 @@ Respond ONLY with valid JSON in this exact format:
 
     try:
         response = client.chat.completions.create(
-            model="google/gemma-3-27b-it:free",
+            model="google/gemini-2.5-flash",
             messages=[
                 {
                     "role": "user",
@@ -102,6 +141,7 @@ Respond ONLY with valid JSON in this exact format:
                 }
             ],
             temperature=0.1,
+            max_tokens=2048,
         )
 
         text = response.choices[0].message.content.strip()
@@ -113,6 +153,11 @@ Respond ONLY with valid JSON in this exact format:
             text = text.strip()
 
         result = json.loads(text)
+
+        # Increment usage counter
+        if user.subscription_tier == "free":
+            user.crop_doctor_uses += 1
+            await db.commit()
 
         return AnalyzeResponse(**result)
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "@/lib/LanguageContext";
 import { useUser } from "@clerk/nextjs";
 import {
     LineChart,
@@ -37,6 +38,7 @@ interface TrendPoint {
 }
 
 export default function MandiPage() {
+    const { t } = useLanguage();
     const [prices, setPrices] = useState<MandiPrice[]>([]);
     const [commodities, setCommodities] = useState<string[]>([]);
     const [states, setStates] = useState<string[]>([]);
@@ -94,7 +96,7 @@ export default function MandiPage() {
             const data = await res.json();
             setPrices(data.prices || []);
         } catch {
-            setError("Failed to load prices. Is the backend running?");
+            setError(t.common.errorLoadingData); // Using common error message
         } finally {
             setLoading(false);
         }
@@ -159,26 +161,26 @@ export default function MandiPage() {
         });
 
     const sortLabels: Record<string, string> = {
-        default: "Default",
-        price_asc: "Price: Low → High",
-        price_desc: "Price: High → Low",
-        state: "State (A-Z)",
-        type: "Commodity (A-Z)",
-        date: "Date (Latest)",
+        default: t.common.default,
+        price_asc: t.common.priceAsc,
+        price_desc: t.common.priceDesc,
+        state: t.mandi.state + " (A-Z)",
+        type: t.mandi.commodity + " (A-Z)",
+        date: t.mandi.date + " (Latest)",
     };
 
     return (
         <div style={{ maxWidth: "1100px" }}>
             {/* Header */}
             <div className="animate-fade-in-up" style={{ marginBottom: "32px" }}>
-                <p style={{ color: "var(--color-accent)", fontWeight: 600, fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    💰 Market Intelligence
+                <p style={{ color: "var(--color-accent)", fontWeight: 600, fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "1rem" }}>₹</span> {t.mandi.subTitle}
                 </p>
                 <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif", marginBottom: "8px" }}>
-                    <span className="gradient-text">Mandi Prices</span>
+                    <span className="gradient-text">{t.mandi.title}</span>
                 </h1>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-                    Live crop market prices from data.gov.in. Auto-updated every 6 hours.
+                    {t.mandi.description}
                 </p>
             </div>
 
@@ -200,7 +202,7 @@ export default function MandiPage() {
                                 fontSize: "0.85rem",
                             }}
                         >
-                            {v === "saved" ? `⭐ Saved (${savedCrops.length})` : v === "mycrops" ? "🌾 My Crops" : "📊 All"}
+                            {v === "saved" ? `⭐ ${t.mandi.saved} (${savedCrops.length})` : v === "mycrops" ? "🌾 " + t.mandi.myCrops : "📊 " + t.mandi.all}
                         </button>
                     ))}
                 </div>
@@ -209,7 +211,7 @@ export default function MandiPage() {
                 <input
                     type="text"
                     className="input-field"
-                    placeholder="Search commodity..."
+                    placeholder={t.mandi.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{ flex: 1, minWidth: "160px" }}
@@ -224,7 +226,7 @@ export default function MandiPage() {
                     style={{ minWidth: "140px", cursor: "pointer" }}
                     id="mandi-state-filter"
                 >
-                    <option value="">All States</option>
+                    <option value="">{t.mandi.allStates}</option>
                     {states.map((s) => (
                         <option key={s} value={s}>{s}</option>
                     ))}
@@ -293,7 +295,7 @@ export default function MandiPage() {
                     disabled={fetching}
                     style={{ padding: "10px 18px", fontSize: "0.85rem", whiteSpace: "nowrap" }}
                 >
-                    {fetching ? "⏳ Fetching..." : "🔄 Fetch Latest"}
+                    {fetching ? "⏳ " + t.mandi.fetching : "🔄 " + t.mandi.fetchLatest}
                 </button>
             </div>
 
@@ -310,10 +312,10 @@ export default function MandiPage() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
                         <div>
                             <h3 style={{ fontWeight: 700, color: "var(--color-text-main)", fontSize: "1.1rem" }}>
-                                📈 Price Trend — {trendCommodity}
+                                📈 {t.mandi.priceTrend} — {trendCommodity}
                             </h3>
                             <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)" }}>
-                                Average modal price over {trendDays} days
+                                {t.mandi.avgPriceLast.replace("{days}", trendDays.toString())}
                             </p>
                         </div>
                         <div style={{ display: "flex", gap: "8px" }}>
@@ -347,15 +349,15 @@ export default function MandiPage() {
                                     fontSize: "0.8rem",
                                 }}
                             >
-                                ✕ Close
+                                ✕ {t.common.close}
                             </button>
                         </div>
                     </div>
 
                     {trendLoading ? (
-                        <div style={{ textAlign: "center", padding: "40px", color: "var(--color-text-dim)" }}>Loading trend data...</div>
+                        <div style={{ textAlign: "center", padding: "40px", color: "var(--color-text-dim)" }}>{t.common.loading}...</div>
                     ) : trendData.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "40px", color: "var(--color-text-dim)" }}>No trend data available for this period. Try fetching more data.</div>
+                        <div style={{ textAlign: "center", padding: "40px", color: "var(--color-text-dim)" }}>{t.common.noDataAvailable}</div>
                     ) : (
                         <ResponsiveContainer width="100%" height={280}>
                             <AreaChart data={trendData}>
@@ -404,21 +406,21 @@ export default function MandiPage() {
                 {loading ? (
                     <div style={{ padding: "60px", textAlign: "center", color: "var(--color-text-dim)" }}>
                         <p style={{ fontSize: "1.5rem", marginBottom: "8px" }}>⏳</p>
-                        Loading prices...
+                        {t.common.loading}...
                     </div>
                 ) : displayed.length === 0 ? (
                     <div style={{ padding: "60px", textAlign: "center", color: "var(--color-text-dim)" }}>
                         <p style={{ fontSize: "1.5rem", marginBottom: "8px" }}>📭</p>
                         {viewMode === "saved"
-                            ? "No saved commodities. Star some to track them!"
-                            : 'No prices found. Click "Fetch Latest" to load data from data.gov.in.'}
+                            ? t.mandi.noSaved
+                            : t.mandi.noPrices}
                     </div>
                 ) : (
                     <div style={{ overflowX: "auto" }}>
                         <table style={{ width: "100%", borderCollapse: "collapse" }}>
                             <thead>
                                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                                    {["Commodity", "Modal ₹", "Min ₹", "Max ₹", "Market", "State", "Date", "Trend", ""].map((h) => (
+                                    {[t.mandi.commodity, t.mandi.modalPrice, t.mandi.minPrice, t.mandi.maxPrice, t.mandi.market, t.mandi.state, t.mandi.date, t.mandi.trend, ""].map((h) => (
                                         <th key={h} style={{ padding: "12px 14px", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-dim)", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                                             {h}
                                         </th>
@@ -495,10 +497,10 @@ export default function MandiPage() {
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
                 <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)" }}>
-                    Showing {displayed.length} prices
+                    {t.mandi.showingPrices.replace("{count}", displayed.length.toString())}
                 </p>
                 <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)" }}>
-                    Source: data.gov.in • Auto-updated every 6 hours
+                    {t.mandi.sourceInfo}
                 </p>
             </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // --- Types ---
 interface Product {
@@ -139,9 +140,7 @@ export default function MarketplacePage() {
     const [showWishlist, setShowWishlist] = useState(false);
     const [detailProduct, setDetailProduct] = useState<Product | null>(null);
     const [sortBy, setSortBy] = useState("featured");
-    const [showCheckout, setShowCheckout] = useState(false);
-    const [orderPlaced, setOrderPlaced] = useState(false);
-    const [addr, setAddr] = useState<Address>({ name: "", phone: "", address: "", pincode: "", state: "" });
+    const router = useRouter();
 
     // Try loading from Sanity
     useEffect(() => {
@@ -343,7 +342,7 @@ export default function MarketplacePage() {
                                 <p style={{ fontWeight: 800, fontSize: "1.1rem", fontFamily: "Outfit, sans-serif" }}>
                                     Total: ₹{cartTotal.toLocaleString()}
                                 </p>
-                                <button className="btn-primary" style={{ padding: "10px 24px" }} onClick={() => setShowCheckout(true)}>
+                                <button className="btn-primary" style={{ padding: "10px 24px" }} onClick={() => router.push("/checkout")}>
                                     Checkout →
                                 </button>
                             </div>
@@ -636,84 +635,7 @@ export default function MarketplacePage() {
                 </div>
             )}
 
-            {/* Checkout Address Modal */}
-            {showCheckout && (
-                <div style={{
-                    position: "fixed", inset: 0, zIndex: 2000,
-                    background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)",
-                    display: "flex", alignItems: "center", justifyContent: "center", padding: "20px",
-                }} onClick={() => { if (!orderPlaced) setShowCheckout(false); }}>
-                    <div className="glass-card" style={{ maxWidth: "480px", width: "100%", padding: "28px", position: "relative" }}
-                        onClick={(e) => e.stopPropagation()}>
-                        {!orderPlaced ? (
-                            <>
-                                <button onClick={() => setShowCheckout(false)} style={{
-                                    position: "absolute", top: "12px", right: "12px",
-                                    background: "rgba(255,255,255,0.08)", border: "none", borderRadius: "50%",
-                                    width: "30px", height: "30px", color: "var(--color-text-muted)", cursor: "pointer", fontSize: "1rem"
-                                }}>✕</button>
-                                <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "4px", fontFamily: "Outfit, sans-serif" }}>📦 Delivery Details</h2>
-                                <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginBottom: "20px" }}>Order total: <strong style={{ color: "var(--color-text-main)" }}>₹{cartTotal.toLocaleString()}</strong> • {cartCount} items</p>
-
-                                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                                    {([
-                                        { key: "name", label: "Full Name", placeholder: "e.g. Rajan Patel", type: "text" },
-                                        { key: "phone", label: "Mobile Number", placeholder: "10-digit mobile number", type: "tel" },
-                                        { key: "address", label: "Full Address", placeholder: "House, Street, Village", type: "text" },
-                                        { key: "pincode", label: "PIN Code", placeholder: "6-digit PIN", type: "text" },
-                                        { key: "state", label: "State", placeholder: "e.g. Maharashtra", type: "text" },
-                                    ] as { key: keyof Address; label: string; placeholder: string; type: string }[]).map(f => (
-                                        <div key={f.key}>
-                                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "4px" }}>{f.label}</label>
-                                            <input
-                                                type={f.type}
-                                                className="input-field"
-                                                placeholder={f.placeholder}
-                                                value={addr[f.key]}
-                                                onChange={e => setAddr(prev => ({ ...prev, [f.key]: e.target.value }))}
-                                                style={{ width: "100%" }}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <button
-                                    className="btn-primary"
-                                    style={{ width: "100%", marginTop: "20px", padding: "13px", fontSize: "0.95rem" }}
-                                    disabled={!addr.name || !addr.phone || !addr.address || !addr.pincode || !addr.state}
-                                    onClick={() => {
-                                        setOrderPlaced(true);
-                                        const newOrder = {
-                                            id: Math.random().toString(36).substring(2, 9).toUpperCase(),
-                                            date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-                                            total: cartTotal,
-                                            items: cart.map(c => ({ name: c.product.name, qty: c.quantity }))
-                                        };
-                                        const existingOrders = JSON.parse(localStorage.getItem("agri_orders") || "[]");
-                                        localStorage.setItem("agri_orders", JSON.stringify([newOrder, ...existingOrders]));
-                                        setCart([]);
-                                        localStorage.removeItem("agri_cart");
-                                    }}
-                                >
-                                    ✅ Place Order — ₹{cartTotal.toLocaleString()}
-                                </button>
-                            </>
-                        ) : (
-                            <div style={{ textAlign: "center", padding: "16px 0" }}>
-                                <p style={{ fontSize: "3rem", marginBottom: "12px" }}>🎉</p>
-                                <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "8px", fontFamily: "Outfit, sans-serif", color: "#22c55e" }}>Order Placed!</h2>
-                                <p style={{ color: "var(--color-text-muted)", marginBottom: "6px", fontSize: "0.9rem" }}>Your order will be delivered to:</p>
-                                <p style={{ fontWeight: 700, color: "var(--color-text-main)", marginBottom: "4px" }}>{addr.name}</p>
-                                <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{addr.address}, {addr.pincode}, {addr.state}</p>
-                                <button className="btn-primary" style={{ marginTop: "20px", padding: "10px 32px" }}
-                                    onClick={() => { setShowCheckout(false); setOrderPlaced(false); setShowCart(false); setAddr({ name: "", phone: "", address: "", pincode: "", state: "" }); }}>
-                                    Done
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+            {/* Removed internal checkout modal — now handled in /checkout */}
         </div>
     );
 }

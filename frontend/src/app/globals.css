@@ -1,5 +1,31 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: dark light;
+  /* Default: Dark Theme (Renamed to avoid conflict with tailwind theme vars) */
+  --root-bg-primary: #0f1a12;
+  --root-bg-secondary: #162419;
+  --root-bg-card: #1a2e1f;
+  --root-bg-card-hover: #1f3824;
+  --root-text-main: #f0fdf4;
+  --root-text-muted: #86efac;
+  --root-text-dim: #6b7280;
+  --root-border: #2d5a36;
+  --root-border-light: #3b7a45;
+}
+
+.light {
+  --root-bg-primary: #f8fafc;
+  --root-bg-secondary: #f1f5f9;
+  --root-bg-card: #ffffff;
+  --root-bg-card-hover: #f1f5f9;
+  --root-text-main: #0f172a;
+  --root-text-muted: #475569;
+  --root-text-dim: #64748b;
+  --root-border: #e2e8f0;
+  --root-border-light: #cbd5e1;
+}
+
 @theme {
   /* === Agriculture-Inspired Color Palette === */
   --color-primary: #16a34a;
@@ -9,19 +35,19 @@
   --color-accent-dark: #d97706;
 
   /* Background and Surface Colors */
-  --color-bg-primary: #0f1a12;
-  --color-bg-secondary: #162419;
-  --color-bg-card: #1a2e1f;
-  --color-bg-card-hover: #1f3824;
+  --color-bg-primary: var(--root-bg-primary);
+  --color-bg-secondary: var(--root-bg-secondary);
+  --color-bg-card: var(--root-bg-card);
+  --color-bg-card-hover: var(--root-bg-card-hover);
 
   /* Text Colors */
-  --color-text-main: #f0fdf4;
-  --color-text-muted: #86efac;
-  --color-text-dim: #6b7280;
+  --color-text-main: var(--root-text-main);
+  --color-text-muted: var(--root-text-muted);
+  --color-text-dim: var(--root-text-dim);
 
   /* Borders */
-  --color-border: #2d5a36;
-  --color-border-light: #3b7a45;
+  --color-border: var(--root-border);
+  --color-border-light: var(--root-border-light);
 
   /* Status */
   --color-success: #22c55e;
@@ -52,7 +78,7 @@ body {
 
 /* ===== Utility Classes ===== */
 .glass-card {
-  background: linear-gradient(135deg, rgba(26, 46, 31, 0.8), rgba(22, 36, 25, 0.6));
+  background: color-mix(in srgb, var(--color-bg-card) 80%, transparent);
   backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: 16px;
@@ -196,23 +222,48 @@ body {
 
 /* ===== Animations ===== */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(22, 163, 74, 0.2); }
-  50% { box-shadow: 0 0 40px rgba(22, 163, 74, 0.4); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(22, 163, 74, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(22, 163, 74, 0.4);
+  }
 }
 
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease forwards;
 }
 
-.animate-delay-1 { animation-delay: 0.1s; }
-.animate-delay-2 { animation-delay: 0.2s; }
-.animate-delay-3 { animation-delay: 0.3s; }
-.animate-delay-4 { animation-delay: 0.4s; }
+.animate-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-3 {
+  animation-delay: 0.3s;
+}
+
+.animate-delay-4 {
+  animation-delay: 0.4s;
+}
 
 /* ===== Upload Zone ===== */
 .upload-zone {
@@ -233,7 +284,7 @@ body {
 
 /* ===== Weather Cards ===== */
 .weather-card {
-  background: linear-gradient(135deg, rgba(26, 46, 31, 0.8), rgba(22, 36, 25, 0.6));
+  background: color-mix(in srgb, var(--color-bg-card) 80%, transparent);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
@@ -257,9 +308,23 @@ body {
   font-weight: 600;
 }
 
-.badge-high { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-.badge-medium { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
-.badge-low { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+.badge-high {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-low {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
 
 /* ===== Spinner ===== */
 .spinner {
@@ -272,7 +337,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== Responsive ===== */
@@ -280,9 +347,11 @@ body {
   .sidebar {
     transform: translateX(-100%);
   }
+
   .sidebar.open {
     transform: translateX(0);
   }
+
   .main-content {
     margin-left: 0;
     padding: 16px;

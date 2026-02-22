@@ -217,7 +217,7 @@ export default function DashboardPage() {
                 <div className="glass-card animate-fade-in-up animate-delay-2" style={{ padding: "24px", display: "flex", flexDirection: "column" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                         <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text-main)", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>💰</span> My Crop Prices
+                            <span style={{ fontSize: "1.2rem", color: "#16a34a" }}>₹</span> My Crop Prices
                         </h2>
                         <Link href="/mandi" style={{ fontSize: "0.85rem", color: "var(--color-primary-light)", textDecoration: "none", fontWeight: 600 }}>
                             View Mandi →

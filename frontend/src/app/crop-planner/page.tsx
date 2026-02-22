@@ -25,7 +25,7 @@ export default function CropPlannerPage() {
     const [landArea, setLandArea] = useState("");
     const [soilType, setSoilType] = useState("");
     const [waterAvailability, setWaterAvailability] = useState("");
-    const [location, setLocation] = useState("Fetching location...");
+    const [location, setLocation] = useState("");
     const [mandiPrices, setMandiPrices] = useState<Record<string, string>>({});
 
     // UI States
@@ -48,23 +48,31 @@ export default function CropPlannerPage() {
 
                 // 2. Fast Location using IP
                 try {
-                    const locRes = await fetch("https://ipapi.co/json/");
-                    const locData = await locRes.json();
-                    const locString = `${locData.city}, ${locData.region}`;
-                    setLocation(locString);
+                    const locRes = await fetch("https://get.geojs.io/v1/ip/geo.json");
+                    if (locRes.ok) {
+                        const locData = await locRes.json();
+                        const locString = (locData.city && locData.region) ? `${locData.city}, ${locData.region}` : "";
+                        if (locString) {
+                            setLocation(locString);
+                        } else {
+                            setLocation("");
+                        }
 
-                    // 3. Fetch Mandi Prices for this state
-                    const mandiRes = await fetch(`${API_BASE}/api/mandi/prices?state=${encodeURIComponent(locData.region)}`);
-                    if (mandiRes.ok) {
-                        const mData = await mandiRes.json();
-                        const prices: Record<string, string> = {};
-                        mData.data.slice(0, 5).forEach((p: any) => {
-                            prices[p.commodity] = `₹${p.modal_price}/quintal`;
-                        });
-                        setMandiPrices(prices);
+                        // 3. Fetch Mandi Prices for this state
+                        const mandiRes = await fetch(`${API_BASE}/api/mandi/prices?state=${encodeURIComponent(locData.region)}`);
+                        if (mandiRes.ok) {
+                            const mData = await mandiRes.json();
+                            const prices: Record<string, string> = {};
+                            mData.data.slice(0, 5).forEach((p: any) => {
+                                prices[p.commodity] = `₹${p.modal_price}/quintal`;
+                            });
+                            setMandiPrices(prices);
+                        }
+                    } else {
+                        setLocation("");
                     }
                 } catch (e) {
-                    setLocation("Location unavailable");
+                    setLocation("");
                 }
 
             } catch (err) {

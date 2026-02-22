@@ -1,7 +1,7 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import Column, Integer, String, Float, JSON, DateTime
+from sqlalchemy import Column, Integer, String, Float, JSON, DateTime, text
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -34,38 +34,62 @@ if DATABASE_URL:
     elif DATABASE_URL.startswith("postgresql://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
     
-    # Parse the URL to safely modify query parameters
     parsed = urlparse(DATABASE_URL)
     query_params = dict(parse_qsl(parsed.query))
-    
-    # asyncpg expects 'ssl=require' instead of 'sslmode=require'
     if 'sslmode' in query_params:
         query_params['ssl'] = query_params.pop('sslmode')
-    
-    # asyncpg does not support all fallback query parameters like options or channel_binding
     query_params.pop('options', None)
     query_params.pop('channel_binding', None)
     
-    # Handle Windows asyncpg getaddrinfo issue by pre-resolving the Neon host IP
+    host_ip = parsed.hostname
+    db_password = parsed.password
+    
+    # Pre-resolve to avoid Windows asyncpg hanging
     try:
         if parsed.hostname and not parsed.hostname.replace('.', '').isdigit():
-            # It's a hostname, not an IP, let's resolve it
-            host_ip = socket.gethostbyname(parsed.hostname)
-            # Reconstruct netloc with the resolved IP
-            netloc = f"{parsed.username}:{parsed.password}@{host_ip}:{parsed.port or 5432}"
-        else:
-            netloc = parsed.netloc
+            import urllib.request, json
+            proxy_handler = urllib.request.ProxyHandler({})
+            opener = urllib.request.build_opener(proxy_handler)
+            urllib.request.install_opener(opener)
+            
+            req = urllib.request.Request(
+                f"https://dns.google/resolve?name={parsed.hostname}",
+                headers={'User-Agent': 'Mozilla/5.0'}
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode())
+                host_ip = next((a['data'] for a in data.get('Answer', []) if a['type'] == 1), parsed.hostname)
+            
+            if host_ip != parsed.hostname:
+                endpoint_id = parsed.hostname.split('.')[0].replace('-pooler', '')
+                db_password = f"endpoint={endpoint_id};{parsed.password}" if parsed.password else ""
     except Exception as e:
-        print(f"⚠️ Could not resolve database hostname {parsed.hostname}: {e}")
-        netloc = parsed.netloc
-    
-    # Reconstruct the URL
-    new_query = urlencode(query_params)
-    DATABASE_URL = urlunparse(
-        (parsed.scheme, netloc, parsed.path, parsed.params, new_query, parsed.fragment)
-    )
+        print(f"⚠️ DoH resolution skip: {e}")
+        host_ip = parsed.hostname
 
-engine = create_async_engine(DATABASE_URL, echo=False)
+    # Reconstruct final URL
+    netloc = f"{parsed.username}:{db_password}@{host_ip}:{parsed.port or 5432}" if parsed.username else host_ip
+    DATABASE_URL = urlunparse((
+        "postgresql+asyncpg",
+        netloc,
+        parsed.path,
+        parsed.params,
+        urlencode(query_params),
+        parsed.fragment
+    ))
+
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,  # Test connections before using them
+    pool_recycle=300,    # Recycle connections every 5 minutes
+    pool_size=5,         # Small pool for low-traffic dev app
+    max_overflow=10,
+    connect_args={
+        "command_timeout": 30,
+        "timeout": 30,
+    }
+)
 AsyncSessionLocal = sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )
@@ -83,8 +107,13 @@ class UserProfile(Base):
     soil_type = Column(String, nullable=True)
     location_lat = Column(Float, nullable=True)
     location_lng = Column(Float, nullable=True)
+    subscription_tier = Column(String, default="free")
+    crop_doctor_uses = Column(Integer, default=0)
     # Storing an array of dicts: [{"crop": "wheat", "planted_date": "2023-11-01"}]
     crops = Column(JSON, nullable=True)
+    preferred_language = Column(String, default="en")
+    # Address structure: {"street": "", "city": "", "state": "", "zip": "", "phone": ""}
+    address = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -97,4 +126,12 @@ async def init_pg_db():
     async with engine.begin() as conn:
         # Create tables
         await conn.run_sync(Base.metadata.create_all)
-        print("✅ Neon PostgreSQL database configured")
+        
+        # Safe migration for missing columns
+        try:
+             await conn.execute(text("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS preferred_language VARCHAR DEFAULT 'en';"))
+             await conn.execute(text("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS address JSON;"))
+        except Exception as e:
+            print(f"⚠️ Schema migration notice: {e}")
+            
+        print("✅ Neon PostgreSQL database configured and migrated")

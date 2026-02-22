@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { useLanguage } from "@/lib/LanguageContext";
 import { useUser } from "@clerk/nextjs";
 import { sanityClient, PRODUCTS_BY_DISEASE_QUERY } from "@/lib/sanity";
 
@@ -32,6 +33,7 @@ interface AnalyzeResult {
 }
 
 export default function CropDoctorPage() {
+    const { t } = useLanguage();
     const [image, setImage] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [description, setDescription] = useState("");
@@ -68,7 +70,7 @@ export default function CropDoctorPage() {
 
     const handleFile = (file: File) => {
         if (!file.type.startsWith("image/")) {
-            setError("Please upload an image file (JPG, PNG, etc.)");
+            setError(t.cropDoctor.invalidImage);
             return;
         }
         setImage(file);
@@ -91,7 +93,7 @@ export default function CropDoctorPage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!image) {
-            setError("Please upload an image first.");
+            setError(t.cropDoctor.uploadImageFirst);
             return;
         }
 
@@ -105,6 +107,10 @@ export default function CropDoctorPage() {
             formData.append("image", image);
             if (description) formData.append("description", description);
             if (selectedCrop) formData.append("crop", selectedCrop);
+            if (user) {
+                formData.append("clerk_id", user.id);
+                formData.append("user_role", (user.publicMetadata?.role as string) || "free_user");
+            }
 
             const resp = await fetch(`${API_BASE}/api/analyze`, {
                 method: "POST",
@@ -113,6 +119,9 @@ export default function CropDoctorPage() {
 
             if (!resp.ok) {
                 const errData = await resp.json().catch(() => ({}));
+                if (errData.detail === "limit_reached") {
+                    throw new Error("LIMIT_REACHED");
+                }
                 throw new Error(errData.detail || `Server error (${resp.status})`);
             }
 
@@ -130,7 +139,7 @@ export default function CropDoctorPage() {
                     setRecommendedProducts(products || []);
                 } catch (err) {
                     console.error("Failed to fetch recommended products:", err);
-                    setError("Failed to fetch recommended products from the marketplace.");
+                    setError(t.cropDoctor.productsFetchFailed);
                 }
             } else {
                 setRecommendedProducts([]);
@@ -180,13 +189,13 @@ export default function CropDoctorPage() {
             {/* Header */}
             <div className="animate-fade-in-up" style={{ marginBottom: "32px" }}>
                 <p style={{ color: "var(--color-primary-light)", fontWeight: 600, fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    🔬 AI Plant Doctor
+                    🔬 {t.cropDoctor.subTitle}
                 </p>
                 <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif", marginBottom: "8px" }}>
-                    <span className="gradient-text">Crop Disease Detection</span>
+                    <span className="gradient-text">{t.cropDoctor.title}</span>
                 </h1>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-                    Upload a photo of your plant or leaf and get an instant AI diagnosis with treatment steps.
+                    {t.cropDoctor.description}
                 </p>
             </div>
 
@@ -213,21 +222,21 @@ export default function CropDoctorPage() {
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={preview}
-                                alt="Selected plant"
+                                alt={t.common.selectedPlant}
                                 style={{ maxWidth: "300px", maxHeight: "250px", borderRadius: "12px", objectFit: "cover" }}
                             />
                             <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem" }}>
-                                {image?.name} — Click to change
+                                {image?.name} — {t.common.clickToChange}
                             </p>
                         </div>
                     ) : (
                         <div>
                             <div style={{ fontSize: "3rem", marginBottom: "12px" }}>📷</div>
                             <p style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "8px" }}>
-                                Drop your plant image here
+                                {t.cropDoctor.dropText}
                             </p>
                             <p style={{ color: "var(--color-text-dim)", fontSize: "0.85rem" }}>
-                                or click to browse files (JPG, PNG, WEBP)
+                                {t.common.browseFiles}
                             </p>
                         </div>
                     )}
@@ -237,7 +246,7 @@ export default function CropDoctorPage() {
                 {myCrops.length > 0 && (
                     <div className="animate-fade-in-up animate-delay-2" style={{ opacity: 0, marginBottom: "20px" }}>
                         <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "8px" }}>
-                            Which crop is this? (Optional)
+                            {t.cropDoctor.whichCrop} {t.common.optional}
                         </label>
                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                             {myCrops.map(c => (
@@ -267,11 +276,11 @@ export default function CropDoctorPage() {
                 {/* Description Field */}
                 <div className="animate-fade-in-up animate-delay-2" style={{ opacity: 0, marginBottom: "20px" }}>
                     <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "8px" }}>
-                        Additional Description (optional)
+                        {t.cropDoctor.additionalDesc} {t.common.optional}
                     </label>
                     <textarea
                         className="input-field"
-                        placeholder="Describe what you see — e.g. yellow spots on leaves, wilting, brown edges..."
+                        placeholder={t.cropDoctor.descPlaceholder}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         rows={3}
@@ -285,10 +294,10 @@ export default function CropDoctorPage() {
                         {loading ? (
                             <>
                                 <span className="spinner" style={{ width: "18px", height: "18px", borderWidth: "2px" }}></span>
-                                Analyzing...
+                                {t.common.analyzing}
                             </>
                         ) : (
-                            <>🔍 Analyze Plant</>
+                            <>🔍 {t.cropDoctor.analyzeBtn}</>
                         )}
                     </button>
                     {(image || result) && (
@@ -306,37 +315,50 @@ export default function CropDoctorPage() {
                                 fontSize: "0.95rem",
                             }}
                         >
-                            Reset
+                            {t.common.reset}
                         </button>
                     )}
                 </div>
             </form>
 
-            {/* Error */}
-            {error && (
+            {/* Error / Upgrade Prompt */}
+            {error === "LIMIT_REACHED" ? (
+                <div className="glass-card animate-fade-in-up" style={{ padding: "32px", borderColor: "var(--color-warning)", marginBottom: "24px", textAlign: "center", background: "linear-gradient(to bottom right, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.15))" }}>
+                    <div style={{ fontSize: "3rem", marginBottom: "16px" }}>⭐</div>
+                    <h3 style={{ color: "var(--color-warning)", marginBottom: "12px", fontSize: "1.4rem", fontWeight: 800 }}>
+                        {t.cropDoctor.limitReachedTitle}
+                    </h3>
+                    <p style={{ color: "var(--color-text-main)", marginBottom: "24px", fontSize: "1.05rem", maxWidth: "400px", margin: "0 auto 24px" }}>
+                        {t.cropDoctor.limitReachedDesc}
+                    </p>
+                    <button className="btn-primary" style={{ background: "var(--color-warning)", color: "#78350f", padding: "12px 32px", fontSize: "1.1rem" }} onClick={() => window.location.href = "/profile"}>
+                        {t.cropDoctor.upgradeBtn}
+                    </button>
+                </div>
+            ) : error ? (
                 <div className="glass-card" style={{ padding: "16px 20px", borderColor: "var(--color-danger)", marginBottom: "24px" }}>
                     <p style={{ color: "var(--color-danger)", fontWeight: 600 }}>⚠️ {error}</p>
                 </div>
-            )}
+            ) : null}
 
             {/* Results */}
             {result && (
                 <div className="animate-fade-in-up" style={{ opacity: 0 }}>
                     <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "20px" }}>
-                        📋 Diagnosis Results
+                        📋 {t.cropDoctor.diagnosisResults}
                     </h2>
 
                     {/* Disease Name & Confidence */}
                     <div className="glass-card" style={{ padding: "24px", marginBottom: "16px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
                             <div>
-                                <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "4px" }}>Disease Detected</p>
+                                <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "4px" }}>{t.cropDoctor.diseaseDetected}</p>
                                 <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: result.disease_name === "Healthy" ? "var(--color-success)" : "var(--color-warning)" }}>
                                     {result.disease_name}
                                 </h3>
                             </div>
                             <span className={`result-badge ${confidenceBadgeClass(result.confidence)}`}>
-                                ● {result.confidence} Confidence
+                                ● {result.confidence} {t.cropDoctor.confidence}
                             </span>
                         </div>
                         {result.description && (
@@ -349,7 +371,7 @@ export default function CropDoctorPage() {
                     {/* Cure Steps */}
                     {result.cure_steps.length > 0 && (
                         <div className="glass-card" style={{ padding: "24px", marginBottom: "16px" }}>
-                            <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "var(--color-primary-light)" }}>💊 Treatment Steps</h4>
+                            <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "var(--color-primary-light)" }}>💊 {t.cropDoctor.treatmentSteps}</h4>
                             <ol style={{ paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "8px" }}>
                                 {result.cure_steps.map((step, i) => (
                                     <li key={i} style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>{step}</li>
@@ -361,7 +383,7 @@ export default function CropDoctorPage() {
                     {/* Pesticides */}
                     {result.pesticides.length > 0 && (
                         <div className="glass-card" style={{ padding: "24px", marginBottom: "16px" }}>
-                            <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "var(--color-accent)" }}>🧪 Recommended Pesticides</h4>
+                            <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "var(--color-accent)" }}>🧪 {t.cropDoctor.recommendedPesticides}</h4>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                                 {result.pesticides.map((p, i) => (
                                     <span key={i} style={{
@@ -382,7 +404,7 @@ export default function CropDoctorPage() {
                     {/* Prevention Tips */}
                     {result.prevention_tips.length > 0 && (
                         <div className="glass-card" style={{ padding: "24px" }}>
-                            <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "var(--color-info)" }}>🛡️ Prevention Tips</h4>
+                            <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "var(--color-info)" }}>🛡️ {t.cropDoctor.preventionTips}</h4>
                             <ul style={{ paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "6px" }}>
                                 {result.prevention_tips.map((tip, i) => (
                                     <li key={i} style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>{tip}</li>
@@ -395,10 +417,10 @@ export default function CropDoctorPage() {
                     {recommendedProducts.length > 0 && (
                         <div className="glass-card" style={{ padding: "24px", marginTop: "16px" }}>
                             <h4 style={{ fontWeight: 700, marginBottom: "16px", color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
-                                🛍️ Recommended Cure Products
+                                🛍️ {t.cropDoctor.recommendedProducts}
                             </h4>
                             <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", marginBottom: "20px" }}>
-                                Directly treat {result.disease_name} with these highly rated solutions from our Marketplace:
+                                {t.cropDoctor.recommendedProductsDesc.replace("{disease}", result.disease_name)}
                             </p>
 
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "20px" }}>
@@ -428,7 +450,7 @@ export default function CropDoctorPage() {
                                             <div style={{ width: "100%", height: "160px", borderRadius: "10px", overflow: "hidden", background: "white", position: "relative" }}>
                                                 {product.isSponsored && (
                                                     <span style={{ position: "absolute", top: "8px", left: "8px", background: "rgba(255, 193, 7, 0.9)", color: "#78350f", fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", textTransform: "uppercase", letterSpacing: "0.05em", backdropFilter: "blur(4px)" }}>
-                                                        Sponsored
+                                                        {t.common.sponsored}
                                                     </span>
                                                 )}
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -441,7 +463,7 @@ export default function CropDoctorPage() {
                                         )}
                                         <div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
                                             <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "4px" }}>
-                                                {product.seller || "AgriMarket"}
+                                                {product.seller || t.common.agriMarket}
                                             </p>
                                             <h5 style={{ fontWeight: 600, fontSize: "1rem", marginBottom: "6px", color: "var(--color-text-main)", lineHeight: 1.3 }}>
                                                 {product.name}
@@ -466,7 +488,7 @@ export default function CropDoctorPage() {
                                                     background: "var(--color-bg-secondary)", color: "var(--color-text-main)",
                                                     fontWeight: 600, fontSize: "0.9rem", border: "1px solid var(--color-primary)"
                                                 }}>
-                                                Added! ({getCartQty(product._id)}) - View Cart
+                                                {t.common.addedToCart.replace("{qty}", getCartQty(product._id).toString())}
                                             </button>
                                         ) : (
                                             <button
@@ -476,7 +498,7 @@ export default function CropDoctorPage() {
                                                     background: "var(--color-primary)", color: "white",
                                                     fontWeight: 600, fontSize: "0.9rem", border: "none"
                                                 }}>
-                                                🛒 Add to Cart
+                                                🛒 {t.common.addToCart}
                                             </button>
                                         )}
                                     </div>

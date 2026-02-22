@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useLanguage } from "@/lib/LanguageContext";
+import { useState, useEffect, useRef, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { useUser } from "@clerk/nextjs";
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -101,6 +102,7 @@ const overallColors: Record<string, { bg: string; border: string; text: string; 
 };
 
 export default function WeatherPage() {
+    const { t } = useLanguage();
     const { user } = useUser();
     const [city, setCity] = useState("");
     const [loading, setLoading] = useState(false);
@@ -126,7 +128,19 @@ export default function WeatherPage() {
                     } catch { /* ignore */ }
                     setGeoLoading(false);
                 },
-                () => setGeoLoading(false),
+                async () => {
+                    try {
+                        const res = await fetch("https://get.geojs.io/v1/ip/geo.json");
+                        if (res.ok) {
+                            const locData = await res.json();
+                            if (locData.city) {
+                                setCity(locData.city);
+                                fetchWeather(locData.city);
+                            }
+                        }
+                    } catch { /* ignore */ }
+                    setGeoLoading(false);
+                },
                 { timeout: 5000 }
             );
         }
@@ -161,13 +175,13 @@ export default function WeatherPage() {
             {/* Header */}
             <div className="animate-fade-in-up" style={{ marginBottom: "32px" }}>
                 <p style={{ color: "var(--color-info)", fontWeight: 600, fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    🌤️ Smart Weather
+                    🌤️ {t.weather.subTitle}
                 </p>
                 <h1 style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "Outfit, sans-serif", marginBottom: "8px" }}>
-                    <span className="gradient-text">Weather & Crop Advisory</span>
+                    <span className="gradient-text">{t.weather.title}</span>
                 </h1>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-                    Real-time weather with AI-powered farming advisories for your crops.
+                    {t.weather.description}
                 </p>
             </div>
 
@@ -176,7 +190,7 @@ export default function WeatherPage() {
                 <input
                     type="text"
                     className="input-field"
-                    placeholder={geoLoading ? "Detecting your location..." : "Enter city name — e.g. Delhi, Jaipur..."}
+                    placeholder={geoLoading ? t.weather.detectingLocation : t.weather.cityPlaceholder}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     style={{ flex: 1, minWidth: "200px" }}
@@ -184,8 +198,8 @@ export default function WeatherPage() {
                 />
                 <button type="submit" className="btn-primary" disabled={loading || !city.trim()}>
                     {loading ? (
-                        <><span className="spinner" style={{ width: "18px", height: "18px", borderWidth: "2px" }}></span> Searching...</>
-                    ) : "🔍 Search"}
+                        <><span className="spinner" style={{ width: "18px", height: "18px", borderWidth: "2px" }}></span> {t.common.searching}</>
+                    ) : `🔍 ${t.common.search}`}
                 </button>
             </form>
 
@@ -224,7 +238,7 @@ export default function WeatherPage() {
                     <div className="glass-card" style={{ padding: "28px" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "20px" }}>
                             <div>
-                                <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "4px" }}>Current Weather</p>
+                                <p style={{ fontSize: "0.8rem", color: "var(--color-text-dim)", marginBottom: "4px" }}>{t.weather.currentWeather}</p>
                                 <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "4px" }}>📍 {data.current.city}</h2>
                                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>{data.current.description}</p>
                             </div>
@@ -240,14 +254,14 @@ export default function WeatherPage() {
                         {/* Extended detail grid */}
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "10px", marginTop: "20px" }}>
                             {[
-                                { label: "Feels Like", value: `${data.current.feels_like.toFixed(1)}°C`, emoji: "🌡️" },
-                                { label: "Humidity", value: `${data.current.humidity}%`, emoji: "💧" },
-                                { label: "Wind", value: `${data.current.wind_speed} m/s`, emoji: "💨" },
-                                { label: "Pressure", value: data.current.pressure ? `${data.current.pressure} hPa` : "–", emoji: "🔵" },
-                                { label: "Visibility", value: data.current.visibility ? `${(data.current.visibility / 1000).toFixed(1)} km` : "–", emoji: "👁️" },
-                                { label: "Clouds", value: data.current.clouds != null ? `${data.current.clouds}%` : "–", emoji: "☁️" },
-                                { label: "Sunrise", value: data.current.sunrise || "–", emoji: "🌅" },
-                                { label: "Sunset", value: data.current.sunset || "–", emoji: "🌇" },
+                                { label: t.common.feelsLike, value: `${data.current.feels_like.toFixed(1)}°C`, emoji: "🌡️" },
+                                { label: t.common.humidity, value: `${data.current.humidity}%`, emoji: "💧" },
+                                { label: t.common.wind, value: `${data.current.wind_speed} m/s`, emoji: "💨" },
+                                { label: t.common.pressure, value: data.current.pressure ? `${data.current.pressure} hPa` : "–", emoji: "🔵" },
+                                { label: t.common.visibility, value: data.current.visibility ? `${(data.current.visibility / 1000).toFixed(1)} km` : "–", emoji: "👁️" },
+                                { label: t.common.clouds, value: data.current.clouds != null ? `${data.current.clouds}%` : "–", emoji: "☁️" },
+                                { label: t.common.sunrise, value: data.current.sunrise || "–", emoji: "🌅" },
+                                { label: t.common.sunset, value: data.current.sunset || "–", emoji: "🌇" },
                             ].map((item) => (
                                 <div key={item.label} style={{
                                     background: "var(--color-bg-secondary)",
@@ -267,7 +281,7 @@ export default function WeatherPage() {
                     {/* === AGRICULTURE ALERTS === */}
                     {data.advisory && data.advisory.alerts.length > 0 && (
                         <div className="glass-card" style={{ padding: "24px" }}>
-                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "14px" }}>🌾 Agriculture Alerts</h3>
+                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "14px" }}>🌾 {t.weather.agriAlerts}</h3>
                             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                 {data.advisory.alerts.map((alert, i) => {
                                     const c = sevColors[alert.severity] || sevColors.info;
@@ -293,7 +307,7 @@ export default function WeatherPage() {
                     {data.advisory && data.advisory.crop_impacts.length > 0 && (
                         <div className="glass-card" style={{ padding: "24px" }}>
                             <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "14px" }}>
-                                🌱 Is This Weather Good For Your Crops?
+                                🌱 {t.weather.cropImpactTitle}
                             </h3>
                             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                                 {data.advisory.crop_impacts.map((ci) => {
@@ -311,7 +325,7 @@ export default function WeatherPage() {
                                                         {oc.emoji} {ci.crop}
                                                     </h4>
                                                     <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                                                        Stage: <strong>{ci.stage}</strong> • Day {ci.day}/{ci.total_days}
+                                                        {t.weather.stage}: <strong>{ci.stage}</strong> • {t.weather.day} {ci.day}/{ci.total_days}
                                                     </p>
                                                 </div>
                                                 <span style={{
@@ -339,7 +353,7 @@ export default function WeatherPage() {
                                                 }} />
                                             </div>
                                             <p style={{ fontSize: "0.75rem", color: "var(--color-text-dim)", marginBottom: "12px" }}>
-                                                {ci.days_to_next} days until <strong>{ci.next_stage}</strong>
+                                                {ci.days_to_next} {t.weather.daysUntil} <strong>{ci.next_stage}</strong>
                                             </p>
 
                                             {/* Summary */}
@@ -381,7 +395,7 @@ export default function WeatherPage() {
                     {/* === HOURLY FORECAST === */}
                     {data.hourly.length > 0 && (
                         <div className="glass-card" style={{ padding: "24px" }}>
-                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "14px" }}>🕐 Next 24 Hours</h3>
+                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "14px" }}>🕐 {t.weather.hourlyForecast}</h3>
                             <div style={{ overflowX: "auto" }}>
                                 <div style={{ display: "flex", gap: "10px", minWidth: "max-content" }}>
                                     {data.hourly.map((h, i) => (
@@ -411,7 +425,7 @@ export default function WeatherPage() {
                     {/* === TEMPERATURE CHART === */}
                     {data.forecast.length > 0 && (
                         <div className="glass-card" style={{ padding: "24px" }}>
-                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "16px" }}>📊 5-Day Temperature Trend</h3>
+                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "16px" }}>📊 {t.weather.temperatureTrend}</h3>
                             <ResponsiveContainer width="100%" height={240}>
                                 <AreaChart data={data.forecast.map((f) => ({ name: f.date, min: f.temperature_min, max: f.temperature_max }))}>
                                     <defs>
@@ -438,7 +452,7 @@ export default function WeatherPage() {
                     {/* === RAIN PROBABILITY CHART === */}
                     {data.forecast.some((f) => f.rain_probability && f.rain_probability > 0) && (
                         <div className="glass-card" style={{ padding: "24px" }}>
-                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "16px" }}>🌧️ Rain Probability</h3>
+                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "16px" }}>🌧️ {t.weather.rainProbability}</h3>
                             <ResponsiveContainer width="100%" height={200}>
                                 <BarChart data={data.forecast.map((f) => ({ name: f.date, rain: f.rain_probability || 0 }))}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -455,7 +469,7 @@ export default function WeatherPage() {
                     {/* === 5-DAY FORECAST CARDS === */}
                     {data.forecast.length > 0 && (
                         <div>
-                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "14px" }}>📅 5-Day Forecast</h3>
+                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "14px" }}>📅 {t.weather.weeklyForecast}</h3>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(165px, 1fr))", gap: "12px" }}>
                                 {data.forecast.map((day) => (
                                     <div key={day.date} className="weather-card">
